@@ -1,0 +1,3 @@
+[submodule "pattern-miner-tutorial"]
+	path = pattern-miner-tutorial
+	url = https://github.com/iCog-Labs-Dev/pattern-miner-tutorial.git
