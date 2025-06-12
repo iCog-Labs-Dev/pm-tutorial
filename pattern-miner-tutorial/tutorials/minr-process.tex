@@ -1,0 +1,225 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\title{The Pattern Mining Process}
+\order{5}
+
+\begin{document}
+
+
+\section{The Pattern Mining Process}
+
+Now we jump into the practical software aspect.   How does pattern mining actually work, leveraging all the contexts introduced above, in the Hyperon framework today?
+
+The Hyperon Pattern Miner is implemented entirely in MeTTa, with its core logic split between two modules:
+
+\begin{itemize}
+  \item \texttt{match/MinerMatch.metta} -- orchestrates the multi-stage mining loop
+  \item \texttt{utils/MinerUtils.metta} -- provides low-level support routines (link extraction, counting, surprisingness, etc.)
+\end{itemize}
+
+Below is a step-by-step walkthrough of how \texttt{(miner \$db \$ms \$depth)} discovers frequent--and optionally surprising--patterns in your AtomSpace.
+
+\subsection{Entry Point: frequent-pattern-miner and miner-surprising}
+
+In \texttt{match/MinerMatch.metta} you will find two top-level definitions:
+
+\begin{verbatim}
+;; Return all frequent patterns up to `depth' clauses
+(= (frequency-pattern-miner $kb $dbspace $specspace $cndpspace $aptrnspace $conjspace $minsup $depth)
+    (superpose (
+            (abstract-pattern $dbspace $minsup $aptrnspace) ; prevent patterns that dont have a support from being speciallized
+            (match $aptrnspace (AbstractPattern $pattern) (build-specialization $pattern $dbspace $specspace)) ; specializa abstract patterns
+            (candidatePattern $dbspace $specspace $minsup $cndpspace); get candidate patterns
+            (match $cndpspace (CandidatePattern $pattern) (let $conj (do-conjunct $dbspace $cndpspace (replacev $pattern) $minsup (fromNumber $depth)) (if (== $conj ()) () (add-atom $conjspace $conj)))) ; store candidate patterns
+            (formatter $kb $conjspace $dbspace)
+        ))
+)
+;; Return only those patterns whose I-Surprisingness > highsurp
+(= (miner-surprising $db $ms $depth $highsurp)
+  (let* (($cptrn (miner $db $ms $depth))
+         ($isurp (iSurprisingness $cptrn)))
+    (if (> $isurp $highsurp)
+        (surp (get-pattern $cptrn) $isurp)
+        (superpose ()))))
+\end{verbatim}
+
+Here:\\
+
+\begin{itemize}
+  \item \texttt{\$dbspace} your AtomSpace database
+  \item \texttt{\$kb} your knowledge base (AtomSpace)
+  \item \texttt{\$specspace} space for storing specialized patterns
+  \item \texttt{\$cndpspace} space for storing candidate patterns
+  \item \texttt{\$aptrnspace} space for storing abstract patterns
+  \item \texttt{\$conjspace} space for storing conjunctions (multi-clause patterns)
+  \item \texttt{\$minsup} minimum support threshold
+  \item \texttt{\$depth} maximum number of clauses per pattern
+  \item \texttt{highsurp} surprisingness threshold (for \texttt{miner-surprising})
+\end{itemize}
+
+\subsection{Stage 1: Extract Abstract Patterns with abstract-pattern}
+
+Abstract patterns are the raw link atoms in your AtomSpace, each turned into a 1-clause template by adding \texttt{VariableNode}s to the link.  In \texttt{experiments/rules/frequent-pattern-miner.metta}:
+
+\begin{verbatim}
+(= (abstract-pattern $dbspace $minsup $aptrnspace)
+            (let* (
+                    ($linkunique (unique (match $dbspace ($link $x $y) $link)))
+                    ($result (sup-eval $dbspace ($linkunique $z $t) $minsup))
+                )
+            (if (== $result True)
+                (superpose (
+                        (remove-atom $aptrnspace (AbstractPattern ($linkunique Z (S Z))))
+                        (add-atom $aptrnspace (AbstractPattern ($linkunique Z (S Z))))
+                    ))
+            empty
+        )
+)
+)
+\end{verbatim}
+
+This produces skeletons like \texttt{(drink $x $y)} or \texttt{(drink Z (S Z))}.
+
+\subsection{Stage 2: Generate Specializations or Potential Candidates via build-specialization}
+
+The function \texttt{build-specialization} handles the specialization of the abstract patterns:
+
+\begin{verbatim}
+(= (build-specialization ($link $x $y) $dbspace $specspace) 
+            (let*
+                (
+                    ( ($link $x1 $y1) (replacev ($link $x $y)))                            ; replacev is a function that replaces index with variables
+                    ( ($subx $suby) (match $dbspace ($link $x1 $y1) ($x1 $y1)))            ; getting the substitution /valuation of the pattern
+                    ($shabx (depth-handler $subx))                                    ;handle depth in the x node
+                    ($shaby (depth-handler $suby))                                    ; handle depth in the y node
+                    ($spec1 (replace (SpecializationOf ($link $shabx $y1) ($link $x $y)))) ;build the specialization and change the variables to indexs 
+                    ($spec2 (replace (SpecializationOf ($link $x1 $shaby) ($link $x $y)))) ;build the specialization and change the variables to indexs
+                )
+            (
+                superpose (
+                    (remove-atom $specspace $spec1) ; remove the old specialization to avoid redundancy
+                    (add-atom $specspace $spec1) ; add the new specialization
+                    (remove-atom $specspace $spec2)
+                    (add-atom $specspace $spec2)
+                )
+        )
+)
+)
+\end{verbatim}
+
+\texttt{specialize} builds specializations by replacing variables with groundings.
+
+\subsection{Stage 3: Counting and Support Filtering/ Candidate Pattern}
+
+The function \texttt{candidatePattern} handles filtertion of specializations using minimum support:
+
+\begin{verbatim}
+(= (candidatePattern $dbspace $spezspace $minsup $cndpspace)
+    (match $spezspace (SpecializationOf $specialized $pattern)
+        (let* (
+                ( $specializedvar (replacev $specialized))
+                ($result (sup-eval $dbspace $specializedvar $minsup))
+            )
+        (if (== $result True)
+            (add-atom $cndpspace (CandidatePattern $specialized))
+            $result
+        )
+)
+)
+)
+\end{verbatim}
+
+This filters out any specializations that do not meet the minimum support threshold.
+
+\subsection{Stage 4: Conjunction Expansion via do-conjunct}
+
+The function \texttt{do-conjunct} handles the conjunction of candidate patterns:
+
+\begin{verbatim}
+(= (do-conjunct $db $cndb $conjunct $ms Z)
+    (let* (
+        ($matches (match $cndb (CandidatePattern $pattern) (replacev $pattern)))
+        ($listconj (expand_conjunction $conjunct $matches $db $ms 2 False))
+        ($debconj (replace $listconj))
+        ($fitlered (remove_conjuncts_with_redundant_clauses $debconj))
+    )
+    $fitlered
+    )
+)
+(= (do-conjunct $db $cndb $conjunct $ms (S $K))
+    (let* (
+        ($matches (match $cndb (CandidatePattern $pattern) (replacev $pattern)))
+        ($listconj (expand_conjunction $conjunct $matches $db $ms 2 False))
+        ($debconj (replace $listconj))
+        ($fitlered (remove_conjuncts_with_redundant_clauses $debconj))
+        ($varconj (replacev $fitlered))
+        ($conj (do-conjunct $db $cndb $varconj $ms $K))
+    )
+    $conj
+    )
+)
+\end{verbatim}
+
+
+This combines candidate patterns into conjunctions recursively for any amount of required clauses if they by creating common variables between them.
+
+\subsection{Stage 5: Scoring by I-Surprisingness}
+
+The surprisingness measure is implemented as:
+
+\begin{verbatim}
+(= (iSurprisingness $pattern)
+  (case $pattern
+    ;; 2-clause
+    ((candidate (, $p1 $p2) $cnt)
+     (let* (($pp1   (prob (count $p1)))
+            ($pp2   (prob (count $p2)))
+            ($exp   (* $pp1 $pp2))
+            ($obs   (prob $cnt)))
+       (// (max (- $obs $exp)
+                (- $exp $obs))
+           $obs)))
+    ;; 3-clause
+    ((candidate (, $p1 $p2 $p3) $cnt)
+     ;; compute pairwise and triple-block expectations...
+     ...)
+    ;; other arities
+    ($_ 0)))
+\end{verbatim}
+
+Here \texttt{prob} divides by \texttt{universe-size}, and the numerator measures the largest deviation from the null model.
+
+\subsection{Stage 6: Putting It All Together}
+
+A full mining call looks like:
+
+\begin{verbatim}
+!(import! &db experiments:data:ugly_man_sodaDrinker)
+!(import! &self  chaining:dtl:backward:curried)
+!(import! &temp   experiments:miner:miner-rules)
+!(import! &self  experiments:miner:system-proofs)
+!(bind! &kb (new-space))
+(=(min-sup) 6)
+(=(surp-mode ) jsdsurp)
+(=(db-ratio) 0.5)
+! (cog-mine &db &kb (min-sup) (surp-mode) (db-ratio))
+\end{verbatim}
+
+This single invocation will:
+
+\begin{enumerate}
+  \item Initialize the miner and index link nodes
+  \item Generate and filter 1-clause candidates
+  \item Recursively expand to 2- and 3-clause patterns
+  \item Score patterns by I-Surprisingness (if using \texttt{miner-surprising})
+  \item Return a stream of \texttt{(pattern, score)} entries
+\end{enumerate}
+
+With this mapping to the codebase, you can see exactly how Hyperon Pattern Miner transforms raw AtomSpace data into ranked pattern templates.
+
+\end{document}

@@ -1,0 +1,1 @@
+cat ../utils/DeBruijnIndex.metta ../utils/MinerUtils.metta chainer.metta MinerCurriedDTLTest.metta > pmDTL1.metta && time metta pmDTL.metta 

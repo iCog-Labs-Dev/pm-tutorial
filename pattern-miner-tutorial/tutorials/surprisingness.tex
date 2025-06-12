@@ -1,0 +1,143 @@
+\documentclass{article}
+
+% ----------- core mathematics -----------
+\usepackage{amsmath}   % align, split, cases, etc.
+\usepackage{amssymb}   % \mathbb, \mathcal, \leqslant, \geqslant ...
+\usepackage{amsfonts}  % blackboard bold, fraktur if desired
+\usepackage{graphicx}  % for future figures, even if none are included yet
+\usepackage{listings}  % for code examples
+\usepackage{hyperref}  % clickable cross-refs; load last
+\usepackage{mdframed}  % for boxed content
+
+% ----------- tables & arrays ------------
+\usepackage{array}     % extended column specifiers in tabular
+\usepackage{booktabs}  % nicer horizontal rules (optional; you may keep \hline)
+\usepackage{multirow}  % multi-row cells if you extend the tables later
+
+% ----------- layout & floats ------------
+\usepackage{geometry}  % easy margin control (defaults are fine; optional)
+\usepackage{caption}   % better caption spacing for tables/figures
+
+\title{Surprisingness }
+\order{4}
+
+\begin{document}
+
+\section{Understanding Surprisingness}
+
+Surprisingness (or "interestingness") in the Hyperon Pattern Miner is implemented in \texttt{utils/MinerUtils.metta} by the I-Surprisingness measure. It compares each pattern's empirical probability against an expected probability under a simple independence-based null model, then normalizes the largest deviation.
+
+\subsection{Universe Size and Empirical Probability}
+
+First, the miner computes the total number of ground atoms:
+
+\begin{verbatim}
+;; Count every atom in the database
+(= (universe-size)
+   (let $u (collapse (match $dbspace $x 1))
+       (tuple-count $u)))
+\end{verbatim}
+
+Given a pattern's support count, its empirical probability is computed as:
+
+\begin{verbatim}
+;; P_obs = support / universe-size
+(= (prob $count)
+   (// $count (universe-size)))
+\end{verbatim}
+
+This defines
+\[
+  P_{\mathrm{obs}}
+  = \frac{\mathrm{support}}{\text{universe-size}}.
+\]
+\subsection{I-Surprisingness for 2 and 3-Clause Patterns}
+
+The core logic lives in:
+
+\begin{verbatim}
+(= (iSurprisingness $pattern)
+  (case $pattern
+    ;; 2-clause patterns
+    ((candidate (, $p1 $p2) $cnt)
+     (let* (($pp1   (prob (count $p1)))
+            ($pp2   (prob (count $p2)))
+            ($exp   (* $pp1 $pp2))
+            ($obs   (prob $cnt)))
+       (// (max (- $obs $exp)
+                (- $exp $obs))
+           $obs)))
+    ;; 3-clause patterns
+    ((candidate (, $p1 $p2 $p3) $cnt)
+     (let* (($pp1    (prob (count $p1)))
+            ($pp2    (prob (count $p2)))
+            ($pp3    (prob (count $p3)))
+            ($pp1p2  (prob (count (, $p1 $p2))))
+            ($pp1p3  (prob (count (, $p1 $p3))))
+            ($pp2p3  (prob (count (, $p2 $p3))))
+            ($maxP   (max (* $pp1p2 $pp3)
+                          (max (* $pp1p3 $pp2)
+                               (max (* $pp2p3 $pp1)
+                                    (* $pp1 (* $pp2 $pp3))))))
+            ($minP   (min (* $pp1p2 $pp3)
+                          (min (* $pp1p3 $pp2)
+                               (min (* $pp2p3 $pp1)
+                                    (* $pp1 (* $pp2 $pp3))))))
+            ($obs    (prob $cnt)))
+       (// (max (- $obs $maxP)
+                (- $minP $obs))
+           $obs)))
+    ;; fallback
+    ($_ 0)))
+\end{verbatim}
+
+For 2-clause patterns:
+\[
+  I = \frac{\max\{\,P_{\mathrm{obs}}-P_{\mathrm{exp}},\;P_{\mathrm{exp}}-P_{\mathrm{obs}}\}}{P_{\mathrm{obs}}},
+  \quad
+  P_{\mathrm{exp}} = P(c_{1})\,P(c_{2}).
+\]
+
+For 3-clause patterns, consider all splits into two independent blocks, compute each block's product probability, take the maximum and minimum of those four values, and then:
+\[
+  I = \frac{\max\{\,P_{\mathrm{obs}}-P_{\mathrm{max}},\;P_{\mathrm{min}}-P_{\mathrm{obs}}\}}{P_{\mathrm{obs}}}.
+\]
+
+Patterns with other clause counts default to zero.
+
+\subsection{Filtering by Surprisingness Threshold}
+
+To filter patterns exceeding a threshold \texttt{highsurp}, use:
+
+\begin{verbatim}
+;; Returns true if I-Surprisingness > highsurp
+(= (isurp? ($pattern $cnt))
+   (if (> (iSurprisingness (candidate $pattern $cnt))
+          (highsurp))
+       true
+       false))
+\end{verbatim}
+
+Or call the high-level function:
+
+\begin{verbatim}
+!(import! &db experiments:data:ugly_man_sodaDrinker)
+!(import! &self  chaining:dtl:backward:curried)
+!(import! &temp   experiments:miner:miner-rules)
+!(import! &self  experiments:miner:system-proofs)
+!(bind! &kb (new-space))
+(=(min-sup) 6)
+(=(surp-mode ) isurp)
+(=(db-ratio) 0.5)
+! (cog-mine &db &kb (min-sup) (surp-mode) (db-ratio))
+\end{verbatim}
+
+This returns only those patterns whose I-Surprisingness exceeds \texttt{highsurp}.
+
+
+
+
+
+
+
+\end{document}
