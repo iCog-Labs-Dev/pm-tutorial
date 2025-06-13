@@ -1,6 +1,7 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
+import { RefreshCcw } from "lucide-react";
 
 export function ResetButton() {
   const handleReset = async () => {
@@ -16,8 +17,12 @@ export function ResetButton() {
   };
 
   return (
-    <Button variant="destructive" size="sm" onClick={handleReset}>
-      Reset AtomSpace
+    <Button variant="outline" size="sm" onClick={handleReset}>
+      {/* Icon for small screens (hidden on md and up) */}
+      <RefreshCcw className="h-4 w-4 md:hidden" />
+
+      {/* Text for medium screens and up */}
+      <span className="hidden md:inline">Reset AtomSpace</span>
     </Button>
   );
 }
