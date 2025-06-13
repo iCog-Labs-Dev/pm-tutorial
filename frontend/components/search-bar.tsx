@@ -66,7 +66,7 @@ export function SearchBar() {
         type="submit"
         variant="ghost"
         size="sm"
-        className="absolute right-0 top-0 h-full px-3"
+        className="hidden lg:inline absolute right-0 top-0 h-full px-3"
         disabled={isSearching}
       >
         {isSearching ? "Searching..." : "Search"}
