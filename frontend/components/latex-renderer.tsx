@@ -10,6 +10,7 @@ import type {
   LatexContent,
   ListItem,
 } from "@/lib/latex-parser";
+import { PseudocodeRenderer } from "./pseudocode-renderer";
 
 interface LatexRendererProps {
   content: LatexContent[];
@@ -156,6 +157,12 @@ export function LatexRenderer({ content }: LatexRendererProps) {
             />
           </div>
         );
+      case "pseudocode":
+        return (
+          <div key={index}>
+            <PseudocodeRenderer code={item?.content ?? ""} />
+          </div>
+        );
 
       case "list":
         const ListTag = item.ordered ? "ol" : "ul";
@@ -179,7 +186,7 @@ export function LatexRenderer({ content }: LatexRendererProps) {
       ref={contentRef}
       className="tutorial-content prose prose-slate max-w-none dark:prose-invert"
     >
-      <style jsx>{`
+      <style>{`
         /* Ensure proper nesting styles for lists */
         .tutorial-content ol {
           counter-reset: item;
