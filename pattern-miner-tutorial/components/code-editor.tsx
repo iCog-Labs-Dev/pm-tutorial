@@ -70,7 +70,7 @@ export function CodeEditor({
 
     try {
       // Prepare the request to the MeTTa API
-      const response = await fetch("http://localhost:5000/run-metta", {
+      const response = await fetch("https://pm-tutorial-2.onrender.com/run-metta", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
