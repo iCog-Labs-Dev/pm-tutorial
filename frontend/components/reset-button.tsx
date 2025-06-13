@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export function ResetButton() {
   const handleReset = async () => {
     try {
-      await fetch("https://pm-tutorial-2.onrender.com/run-metta", {
+      await fetch("https://pm-tutorial-2.onrender.com/reset-atomspace", {
         method: "POST",
       });
       alert("AtomSpace has been reset.");
