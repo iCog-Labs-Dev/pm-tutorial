@@ -116,3 +116,105 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* MeTTa Syntax Highlighting Colors */
+
+/* Comments - Green as requested */
+code[class*="language-"] .token.comment,
+pre[class*="language-"] .token.comment {
+  color: #008000 !important;
+  font-style: italic;
+}
+
+/* Strings - Red */
+code[class*="language-"] .token.string,
+pre[class*="language-"] .token.string {
+  color: #a31515 !important;
+}
+
+/* Keywords - Blue */
+code[class*="language-"] .token.keyword,
+pre[class*="language-"] .token.keyword {
+  color: #0000ff !important;
+  font-weight: bold;
+}
+
+/* Operators - Dark gray */
+code[class*="language-"] .token.operator,
+pre[class*="language-"] .token.operator {
+  color: #00bfff !important;
+}
+
+/* Parentheses - Green as specified */
+code[class*="language-"] .token.parenthesis,
+pre[class*="language-"] .token.parenthesis {
+  color: #008000 !important;
+  font-weight: bold;
+}
+
+/* Brackets and Braces - Purple */
+code[class*="language-"] .token.bracket,
+pre[class*="language-"] .token.bracket {
+  color: #800080 !important;
+}
+
+/* Numbers - Orange */
+code[class*="language-"] .token.number,
+pre[class*="language-"] .token.number {
+  color: #ff8c00 !important;
+}
+
+/* Functions - Dark blue */
+code[class*="language-"] .token.function,
+pre[class*="language-"] .token.function {
+  color: #0066cc !important;
+}
+
+/* Punctuation - Gray */
+code[class*="language-"] .token.punctuation,
+pre[class*="language-"] .token.punctuation {
+  color: #999999 !important;
+}
+
+/* Dark mode overrides */
+.dark code[class*="language-"] .token.comment,
+.dark pre[class*="language-"] .token.comment {
+  color: #6a9955 !important;
+}
+
+.dark code[class*="language-"] .token.string,
+.dark pre[class*="language-"] .token.string {
+  color: #ce9178 !important;
+}
+
+.dark code[class*="language-"] .token.keyword,
+.dark pre[class*="language-"] .token.keyword {
+  color: #569cd6 !important;
+}
+
+.dark code[class*="language-"] .token.operator,
+.dark pre[class*="language-"] .token.operator {
+  color: #d4d4d4 !important;
+}
+
+.dark code[class*="language-"] .token.parenthesis,
+.dark pre[class*="language-"] .token.parenthesis {
+  color: #6a9955 !important;
+}
+
+.dark code[class*="language-"] .token.bracket,
+.dark pre[class*="language-"] .token.bracket {
+  color: #c586c0 !important;
+}
+
+.dark code[class*="language-"] .token.number,
+.dark pre[class*="language-"] .token.number {
+  color: #b5cea8 !important;
+}
+
+.dark code[class*="language-"] .token.function,
+.dark pre[class*="language-"] .token.function {
+  color: #dcdcaa !important;
+}
+
+

@@ -265,7 +265,7 @@ export function BibliographyRenderer({ items }: BibliographyProps) {
                     {item.authors && (
                       <div>
                         <strong>Authors:</strong> {item.authors}
-                      </div>
+                      </div>  
                     )}
                     {item.title && (
                       <div>

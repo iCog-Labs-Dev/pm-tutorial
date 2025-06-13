@@ -1,11 +1,17 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { Check, Clipboard, Play, Lock, Unlock, RefreshCw, Loader } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
+import { useTheme } from "next-themes"
+
+
 
 interface CodeEditorProps {
   code: string
@@ -17,8 +23,9 @@ interface CodeEditorProps {
 
 export function CodeEditor({
   code: initialCode,
-
+  language = "metta",
   readOnly: initialReadOnly = false,
+  showLineNumbers = true,
   className = "",
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode)
@@ -28,9 +35,20 @@ export function CodeEditor({
   const [isExecuting, setIsExecuting] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [hasRun, setHasRun] = useState(false)
+  const [highlightedCode, setHighlightedCode] = useState("")
+  const [prismLoaded, setPrismLoaded] = useState(false)
+
   const codeTextareaRef = useRef<HTMLTextAreaElement>(null)
   const resultTextareaRef = useRef<HTMLTextAreaElement>(null)
 
+   const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isDarkMode = mounted && resolvedTheme === "dark"
   // Reset code to initial value
   const handleResetCode = () => {
     setCode(initialCode)
@@ -120,6 +138,137 @@ export function CodeEditor({
     }
   }, [output, error])
 
+  // Load Prism.js for syntax highlighting
+  useEffect(() => {
+    const loadPrism = async () => {
+      try {
+        // Import Prism core
+        const prismModule = await import("prismjs")
+        const Prism = prismModule.default
+
+        // Define MeTTa language based on the provided syntax
+       Prism.languages.metta = {
+  // Comments: both single-line and block
+  comment: [
+    {
+      pattern: /\/\/.*$/m, // single-line //
+      greedy: true,
+    },
+    {
+      pattern: /\/\*[\s\S]*?\*\//, // block /* ... */
+      greedy: true,
+    },
+  ],
+
+  // Strings: single and double quoted
+  string: [
+    {
+      pattern: /'(?:[^'\\]|\\.)*'/,
+      greedy: true,
+    },
+    {
+      pattern: /"(?:[^"\\]|\\.)*"/,
+      greedy: true,
+    },
+  ],
+
+  // Keywords
+  keyword: {
+    pattern: /\b(?:Type|\$[a-zA-Z]*)\b/,
+    greedy: true,
+  },
+
+  // Operators
+  operator: {
+    pattern: /[:+*/\-]|->|=/,
+    alias:'operator'
+  },
+
+  // Parentheses (you can style these via CSS using the token name)
+  punctuation: {
+    pattern: /[()]/,
+    alias: 'parenthesis', // Will give this group a `token parenthesis` class
+  },
+
+  // Optional: Brackets and other punctuation
+  bracket: {
+    pattern: /[\[\]{}]/,
+  },
+
+  // Optional: Numbers
+  number: {
+    pattern: /\b\d+(?:\.\d+)?\b/,
+  },
+
+  // Optional: Function-like identifiers (you can remove if not needed)
+  function: {
+    pattern: /\b[a-zA-Z][a-zA-Z0-9-]*(?=\s*[(!])/,
+  },
+
+  // Punctuation like commas or semicolons
+  punctuation_mark: {
+    pattern: /[;,]/,
+  },
+}
+
+
+        setPrismLoaded(true)
+      } catch (error) {
+        console.error("Failed to load Prism:", error)
+      }
+    }
+
+    loadPrism()
+  }, [])
+
+  // Apply syntax highlighting when code changes or Prism loads
+  useEffect(() => {
+    if (!prismLoaded) return
+
+    const highlightCode = async () => {
+      try {
+        const Prism = (await import("prismjs")).default
+        const highlighted = Prism.highlight(code, Prism.languages.metta, "metta")
+        setHighlightedCode(highlighted)
+      } catch (error) {
+        console.error("Failed to highlight code:", error)
+        // Fallback to plain text if highlighting fails
+        setHighlightedCode(escapeHtml(code))
+      }
+    }
+
+    highlightCode()
+  }, [code, prismLoaded])
+
+  // Escape HTML to prevent XSS when fallback is needed
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;")
+  }
+
+  // Handle tab key in textarea
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault()
+      const start = e.currentTarget.selectionStart
+      const end = e.currentTarget.selectionEnd
+      const newCode = code.substring(0, start) + "  " + code.substring(end)
+      setCode(newCode)
+
+      // Set cursor position after inserted tab
+      setTimeout(() => {
+        if (codeTextareaRef.current) {
+          codeTextareaRef.current.selectionStart = start + 2
+          codeTextareaRef.current.selectionEnd = start + 2
+        }
+      }, 0)
+    }
+  }
+
   // Get the button based on execution state
   const getExecutionButton = () => {
     if (isExecuting) {
@@ -151,10 +300,8 @@ export function CodeEditor({
       {/* Code Editor */}
       <Card className="border rounded-md overflow-hidden mb-4">
         <div className="group flex items-center justify-between bg-muted p-1 border-b">
-        
-            <Badge variant="outline"> Code </Badge>
-          
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <Badge variant="outline">{language.toUpperCase()}</Badge>
+          <div className="flex items-center gap-1">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -197,27 +344,40 @@ export function CodeEditor({
         </div>
 
         <div className="relative">
+          {/* Editable textarea (invisible but functional) */}
           <textarea
             ref={codeTextareaRef}
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleKeyDown}
             readOnly={readOnly}
             spellCheck={false}
-            className={`w-full font-mono text-sm p-4  resize-none bg-background focus:outline-none ${
-              readOnly ? "cursor-default" : ""
-            } `}
+            className="w-full font-mono text-sm p-4 resize-none absolute top-0 left-0 right-0 bottom-0 z-10 text-transparent focus:outline-none focus:ring-0 focus:border-none"
             style={{
               lineHeight: "1.5",
               tabSize: 2,
+              caretColor: !isDarkMode ? "black" : "white", // Make cursor visible
+              background: "transparent",
             }}
           />
 
+          {/* Syntax highlighted code display */}
+          <pre
+            className="w-full font-mono text-sm p-4 m-0 overflow-auto whitespace-pre-wrap"
+            style={{ lineHeight: "1.5" }}
+          >
+            {prismLoaded ? (
+              <code className="language-metta" dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+            ) : (
+              <code className="language-metta">{code}</code>
+            )}
+          </pre>
         </div>
       </Card>
 
       {/* Result Editor */}
-      <Card className={` ${hasRun ? " overflow-hidden border rounded-md ": " border-none"} `}>
-        <div className={`group flex items-center justify-between    ${hasRun ? "bg-muted border-b p-2" : ""}`}>
+      <Card className={`${hasRun ? "overflow-hidden border rounded-md" : "border-none"}`}>
+        <div className={`group flex items-center justify-between ${hasRun ? "bg-muted border-b p-2" : ""}`}>
           <div className="flex items-center gap-2">
             {getExecutionButton()}
             {(output || error) && <Badge variant={error ? "destructive" : "secondary"}>{error ? "Error" : ""}</Badge>}
@@ -227,11 +387,15 @@ export function CodeEditor({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      navigator.clipboard.writeText(getResultContent());
-                      setIsCopied(true);
-                      setTimeout(() => setIsCopied(false), 2000);
-                    }}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(getResultContent())
+                        setIsCopied(true)
+                        setTimeout(() => setIsCopied(false), 2000)
+                      }}
+                    >
                       {isCopied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
                     </Button>
                   </TooltipTrigger>
@@ -245,16 +409,16 @@ export function CodeEditor({
         </div>
 
         <div className="relative">
-          {(!hasRun && !isExecuting) ? (
-            <div className="flex items-center justify-center p-8 text-muted-foreground">
- 
-            </div>
+          {!hasRun && !isExecuting ? (
+            <div className="flex items-center justify-center p-8 text-muted-foreground"></div>
           ) : (
-             <textarea
+            <textarea
               ref={resultTextareaRef}
               value={getResultContent()}
               readOnly
-              className={`w-full font-mono text-sm p-4  resize-none focus:outline-none cursor-default bg-background ${isExecuting ? "text-gray-500 dark:text-gray-400" : ""}`}
+              className={`w-full font-mono text-sm p-4 resize-none focus:outline-none cursor-default bg-background ${
+                isExecuting ? "text-gray-500 dark:text-gray-400" : ""
+              }`}
               style={{
                 lineHeight: "1.5",
                 minHeight: "0.5rem",
@@ -290,4 +454,3 @@ export function CodeEditor({
     }
   }
 }
-
