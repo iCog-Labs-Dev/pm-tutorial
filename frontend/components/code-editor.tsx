@@ -12,7 +12,7 @@ import { useTheme } from "next-themes"
 
 // Import the custom MeTTa highlighter hook
 import { useMeTTaHighlighter } from "@/hooks/useMeTTaHighlighter"
-    
+
 interface CodeEditorProps {
   code: string
   language: string
@@ -204,7 +204,7 @@ export function CodeEditor({
       <Card className="border rounded-md overflow-hidden mb-4">
         <div className="group flex items-center justify-between bg-muted p-1 border-b">
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{language.toUpperCase()}</Badge>
+            <Badge variant="outline">MeTTa</Badge>
             {highlighterLoading && (
               <Badge variant="secondary" className="text-xs">
                 Loading highlighter...
