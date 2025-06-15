@@ -19,7 +19,8 @@ export type LatexContent =
   | { type: "math"; content: string }
   | { type: "code"; language: string; content: string }
   | { type: "list"; ordered: boolean; items: ListItem[] }
-  | { type: "bibliography"; items: BibliographyItem[] };
+  | { type: "bibliography"; items: BibliographyItem[] }
+  | { type: "pseudocode"; content: string };
 
 export type NestedCode = {
   type: string;
@@ -161,7 +162,7 @@ function processSectionContent(content: string, result: LatexContent[]): void {
   // Only extract and preserve code blocks to prevent splitting by empty lines
   const codeBlocks: { placeholder: string; content: string }[] = [];
   let processedContent = content;
-  
+
   // Extract verbatim blocks
   processedContent = processedContent.replace(
     /\\begin\{verbatim\}([\s\S]*?)\\end\{verbatim\}/g,
@@ -171,7 +172,7 @@ function processSectionContent(content: string, result: LatexContent[]): void {
       return placeholder;
     }
   );
-  
+
   // Extract lstlisting blocks
   processedContent = processedContent.replace(
     /\\begin\{lstlisting\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{lstlisting\}/g,
@@ -181,7 +182,7 @@ function processSectionContent(content: string, result: LatexContent[]): void {
       return placeholder;
     }
   );
-  
+
   // Extract minted blocks
   processedContent = processedContent.replace(
     /\\begin\{minted\}\{([^}]*)\}([\s\S]*?)\\end\{minted\}/g,
@@ -219,6 +220,11 @@ function processSectionContent(content: string, result: LatexContent[]): void {
       continue;
     }
 
+    if (trimmedParagraph.startsWith("\\begin{algpseudocode}")) {
+      extractPseudocodeContent(content, result);
+      continue;
+    }
+
     // Handle bibliography normally
     if (trimmedParagraph.startsWith("\\begin{thebibliography}")) {
       let bibBlock = trimmedParagraph;
@@ -241,14 +247,15 @@ function processSectionContent(content: string, result: LatexContent[]): void {
         skip++
       ) {
         paragraphs[skip] = "";
+        ``;
       }
       continue;
     }
 
     // Regular paragraph - clean any remaining placeholders
     let cleanedParagraph = trimmedParagraph;
-    cleanedParagraph = cleanedParagraph.replace(/__[A-Z_]+_\d+__/g, '').trim();
-    
+    cleanedParagraph = cleanedParagraph.replace(/__[A-Z_]+_\d+__/g, "").trim();
+
     if (cleanedParagraph) {
       result.push({
         type: "paragraph",
@@ -267,14 +274,14 @@ function extractCodeContent(content: string, result: LatexContent[]): void {
       /\\begin\{verbatim\}([\s\S]*?)\\end\{verbatim\}/
     );
     if (match) {
-      codeContent = match[1].replace(/^\n+|\n+$/g, '');
+      codeContent = match[1].replace(/^\n+|\n+$/g, "");
     }
   } else if (content.includes("\\begin{lstlisting}")) {
     const match = content.match(
       /\\begin\{lstlisting\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{lstlisting\}/
     );
     if (match) {
-      codeContent = match[2].replace(/^\n+|\n+$/g, '');
+      codeContent = match[2].replace(/^\n+|\n+$/g, "");
       const languageMatch = match[1]?.match(/language=(\w+)/);
       if (languageMatch) language = languageMatch[1];
     }
@@ -284,7 +291,7 @@ function extractCodeContent(content: string, result: LatexContent[]): void {
     );
     if (match) {
       language = match[1];
-      codeContent = match[2].replace(/^\n+|\n+$/g, '');
+      codeContent = match[2].replace(/^\n+|\n+$/g, "");
     }
   }
 
@@ -306,14 +313,14 @@ function extractNestedCodeContent(content: string): NestedCode | null {
       /\\begin\{verbatim\}([\s\S]*?)\\end\{verbatim\}/
     );
     if (match) {
-      codeContent = match[1].replace(/^\n+|\n+$/g, '');
+      codeContent = match[1].replace(/^\n+|\n+$/g, "");
     }
   } else if (content.includes("\\begin{lstlisting}")) {
     const match = content.match(
       /\\begin\{lstlisting\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{lstlisting\}/
     );
     if (match) {
-      codeContent = match[2].replace(/^\n+|\n+$/g, '');
+      codeContent = match[2].replace(/^\n+|\n+$/g, "");
       const languageMatch = match[1]?.match(/language=(\w+)/);
       if (languageMatch) language = languageMatch[1];
     }
@@ -323,7 +330,7 @@ function extractNestedCodeContent(content: string): NestedCode | null {
     );
     if (match) {
       language = match[1];
-      codeContent = match[2].replace(/^\n+|\n+$/g, '');
+      codeContent = match[2].replace(/^\n+|\n+$/g, "");
     }
   }
 
@@ -340,8 +347,8 @@ function extractNestedCodeContent(content: string): NestedCode | null {
 
 // FIXED: Enhanced extractListContent function with proper placeholder resolution
 function extractListContent(
-  content: string, 
-  result: LatexContent[], 
+  content: string,
+  result: LatexContent[],
   codeBlocks: { placeholder: string; content: string }[] = []
 ): void {
   const isOrdered = content.includes("\\begin{enumerate}");
@@ -374,7 +381,7 @@ function extractListContent(
 
       // Look ahead to collect all content for this item until next \item or end
       const itemLines: string[] = [itemContent];
-      
+
       while (j < lines.length) {
         const nextLine = lines[j].trim();
 
@@ -434,7 +441,8 @@ function extractListContent(
             const blockIndex = parseInt(placeholderMatch[1]);
             const codeBlock = codeBlocks[blockIndex];
             if (codeBlock) {
-              nestedCode = extractNestedCodeContent(codeBlock.content) ?? undefined;
+              nestedCode =
+                extractNestedCodeContent(codeBlock.content) ?? undefined;
             }
           }
           j++;
@@ -468,7 +476,8 @@ function extractListContent(
             j++;
           }
 
-          nestedCode = extractNestedCodeContent(codeContent.trim()) ?? undefined ;
+          nestedCode =
+            extractNestedCodeContent(codeContent.trim()) ?? undefined;
           break;
         } else {
           // Add this line to the current item content
@@ -481,20 +490,25 @@ function extractListContent(
 
       // Clean and combine item content, resolving any remaining placeholders
       let finalItemContent = itemLines.join(" ").trim();
-      
+
       // Resolve any remaining code block placeholders in the text
       if (codeBlocks && codeBlocks.length > 0) {
-        finalItemContent = finalItemContent.replace(/__CODE_BLOCK_(\d+)__/g, (match, index) => {
-          const blockIndex = parseInt(index);
-          if (codeBlocks[blockIndex]) {
-            // If we find a placeholder but don't have nested code yet, extract it
-            if (!nestedCode) {
-              nestedCode = extractNestedCodeContent(codeBlocks[blockIndex].content) ?? undefined ;
+        finalItemContent = finalItemContent.replace(
+          /__CODE_BLOCK_(\d+)__/g,
+          (match, index) => {
+            const blockIndex = parseInt(index);
+            if (codeBlocks[blockIndex]) {
+              // If we find a placeholder but don't have nested code yet, extract it
+              if (!nestedCode) {
+                nestedCode =
+                  extractNestedCodeContent(codeBlocks[blockIndex].content) ??
+                  undefined;
+              }
+              return ""; // Remove the placeholder from text
             }
-            return ""; // Remove the placeholder from text
+            return match;
           }
-          return match;
-        });
+        );
       }
 
       // Create the list item
@@ -596,6 +610,26 @@ function parseBibliographyItem(key: string, content: string): BibliographyItem {
     venue: venue || undefined,
     year: year || undefined,
   };
+}
+
+export function extractPseudocodeContent(
+  content: string,
+  result: LatexContent[]
+): void {
+  const pseudocodeRegex =
+    /\\begin\{algpseudocode\}([\s\S]*?)\\end\{algpseudocode\}/g;
+  let match;
+
+  while ((match = pseudocodeRegex.exec(content)) !== null) {
+    const pseudocodeContent = match[1].trim();
+
+    if (pseudocodeContent) {
+      result.push({
+        type: "pseudocode",
+        content: pseudocodeContent,
+      });
+    }
+  }
 }
 
 function cleanLatexText(text: string): string {
