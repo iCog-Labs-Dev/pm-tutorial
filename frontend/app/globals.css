@@ -117,7 +117,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* MeTTa Syntax Highlighting Colors */
+MeTTa Syntax Highlighting Colors
 
 /* Comments - Green as requested */
 code[class*="language-"] .token.comment,
@@ -130,6 +130,20 @@ pre[class*="language-"] .token.comment {
 code[class*="language-"] .token.string,
 pre[class*="language-"] .token.string {
   color: #a31515 !important;
+}
+
+/* Variables - Purple */
+code[class*="language-"] .token.variable,
+pre[class*="language-"] .token.variable {
+  color: #9932cc !important;
+  font-weight: bold;
+}
+
+/* AtomSpace - Teal */
+code[class*="language-"] .token.atomspace,
+pre[class*="language-"] .token.atomspace {
+  color: #008b8b !important;
+  font-weight: bold;
 }
 
 /* Keywords - Blue */
@@ -145,10 +159,57 @@ pre[class*="language-"] .token.operator {
   color: #00bfff !important;
 }
 
-/* Parentheses - Green as specified */
-code[class*="language-"] .token.parenthesis,
-pre[class*="language-"] .token.parenthesis {
+/* Nested Parentheses - Different colors for each level */
+code[class*="language-"] .token.paren-open,
+code[class*="language-"] .token.paren-close,
+pre[class*="language-"] .token.paren-open,
+pre[class*="language-"] .token.paren-close {
+  font-weight: bold;
+}
+
+/* Level 0 - Green */
+code[class*="language-"] .token.paren-level-0,
+pre[class*="language-"] .token.paren-level-0 {
   color: #008000 !important;
+}
+
+/* Level 1 - Blue */
+code[class*="language-"] .token.paren-level-1,
+pre[class*="language-"] .token.paren-level-1 {
+  color: #0066cc !important;
+}
+
+/* Level 2 - Purple */
+code[class*="language-"] .token.paren-level-2,
+pre[class*="language-"] .token.paren-level-2 {
+  color: #9932cc !important;
+}
+
+/* Level 3 - Orange */
+code[class*="language-"] .token.paren-level-3,
+pre[class*="language-"] .token.paren-level-3 {
+  color: #ff8c00 !important;
+}
+
+/* Level 4 - Magenta */
+code[class*="language-"] .token.paren-level-4,
+pre[class*="language-"] .token.paren-level-4 {
+  color: #ff1493 !important;
+}
+
+/* Level 5 - Cyan */
+code[class*="language-"] .token.paren-level-5,
+pre[class*="language-"] .token.paren-level-5 {
+  color: #00bfff !important;
+}
+
+/* Unmatched/Unclosed Parentheses - Red */
+code[class*="language-"] .token.paren-unmatched,
+code[class*="language-"] .token.paren-error,
+pre[class*="language-"] .token.paren-unmatched,
+pre[class*="language-"] .token.paren-error {
+  color: #ff0000 !important;
+  background-color: rgba(255, 0, 0, 0.1) !important;
   font-weight: bold;
 }
 
@@ -176,6 +237,12 @@ pre[class*="language-"] .token.punctuation {
   color: #999999 !important;
 }
 
+/* Punctuation marks - Gray */
+code[class*="language-"] .token.punctuation_mark,
+pre[class*="language-"] .token.punctuation_mark {
+  color: #999999 !important;
+}
+
 /* Dark mode overrides */
 .dark code[class*="language-"] .token.comment,
 .dark pre[class*="language-"] .token.comment {
@@ -187,6 +254,16 @@ pre[class*="language-"] .token.punctuation {
   color: #ce9178 !important;
 }
 
+.dark code[class*="language-"] .token.variable,
+.dark pre[class*="language-"] .token.variable {
+  color: #c586c0 !important;
+}
+
+.dark code[class*="language-"] .token.atomspace,
+.dark pre[class*="language-"] .token.atomspace {
+  color: #4ec9b0 !important;
+}
+
 .dark code[class*="language-"] .token.keyword,
 .dark pre[class*="language-"] .token.keyword {
   color: #569cd6 !important;
@@ -194,12 +271,47 @@ pre[class*="language-"] .token.punctuation {
 
 .dark code[class*="language-"] .token.operator,
 .dark pre[class*="language-"] .token.operator {
-  color: #d4d4d4 !important;
+  color: #f308d0 !important;
 }
 
-.dark code[class*="language-"] .token.parenthesis,
-.dark pre[class*="language-"] .token.parenthesis {
+/* Dark mode nested parentheses */
+.dark code[class*="language-"] .token.paren-level-0,
+.dark pre[class*="language-"] .token.paren-level-0 {
   color: #6a9955 !important;
+}
+
+.dark code[class*="language-"] .token.paren-level-1,
+.dark pre[class*="language-"] .token.paren-level-1 {
+  color: #569cd6 !important;
+}
+
+.dark code[class*="language-"] .token.paren-level-2,
+.dark pre[class*="language-"] .token.paren-level-2 {
+  color: #c586c0 !important;
+}
+
+.dark code[class*="language-"] .token.paren-level-3,
+.dark pre[class*="language-"] .token.paren-level-3 {
+  color: #d6939e !important;
+}
+
+.dark code[class*="language-"] .token.paren-level-4,
+.dark pre[class*="language-"] .token.paren-level-4 {
+  color: #ff79c6 !important;
+}
+
+.dark code[class*="language-"] .token.paren-level-5,
+.dark pre[class*="language-"] .token.paren-level-5 {
+  color: #8be9fd !important;
+}
+
+/* Dark mode unmatched parentheses */
+.dark code[class*="language-"] .token.paren-unmatched,
+.dark code[class*="language-"] .token.paren-error,
+.dark pre[class*="language-"] .token.paren-unmatched,
+.dark pre[class*="language-"] .token.paren-error {
+  color: #ff5555 !important;
+  background-color: rgba(255, 85, 85, 0.15) !important;
 }
 
 .dark code[class*="language-"] .token.bracket,
@@ -209,12 +321,24 @@ pre[class*="language-"] .token.punctuation {
 
 .dark code[class*="language-"] .token.number,
 .dark pre[class*="language-"] .token.number {
-  color: #b5cea8 !important;
+  color: #d6439e !important;
 }
 
 .dark code[class*="language-"] .token.function,
 .dark pre[class*="language-"] .token.function {
   color: #dcdcaa !important;
 }
+
+.dark code[class*="language-"] .token.punctuation,
+.dark pre[class*="language-"] .token.punctuation {
+  color: #cccccc !important;
+}
+
+.dark code[class*="language-"] .token.punctuation_mark,
+.dark pre[class*="language-"] .token.punctuation_mark {
+  color: #cccccc !important;
+}
+
+
 
 

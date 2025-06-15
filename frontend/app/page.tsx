@@ -9,7 +9,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center space-y-8 text-center">
             <div className="space-y-4">
               <h1 className="text-4xl font-bold tracking-tighter sm:text-6xl md:text-7xl">
-                Learn with Interactive Tutorials
+                Hyperon Pattern Miner Tutorial
               </h1>
               <p className="max-w-[800px] mx-auto text-lg text-muted-foreground md:text-xl">
                 Explore our hyperon pattern miner core concepts , algorithms and way of implementations .
@@ -17,7 +17,7 @@ export default function HomePage() {
             </div>
             <div className="space-x-4 pt-6">
               <Link href="/tutorials">
-                <Button size="lg" className="text-base">Pattern Miner Tutorial</Button>
+                <Button size="lg" className="text-base">Start Tutorial</Button>
               </Link>
               <Link href="https://metta-lang.dev/docs/learn/learn.html">
                 <Button variant="outline" size="lg" className="text-base">Learn MeTTa</Button>

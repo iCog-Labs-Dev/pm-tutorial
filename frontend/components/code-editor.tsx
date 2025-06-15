@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
 import { useTheme } from "next-themes"
 
-
-
+// Import the custom MeTTa highlighter hook
+import { useMeTTaHighlighter } from "@/hooks/useMeTTaHighlighter"
+    
 interface CodeEditorProps {
   code: string
   language: string
@@ -35,20 +35,22 @@ export function CodeEditor({
   const [isExecuting, setIsExecuting] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [hasRun, setHasRun] = useState(false)
-  const [highlightedCode, setHighlightedCode] = useState("")
-  const [prismLoaded, setPrismLoaded] = useState(false)
 
   const codeTextareaRef = useRef<HTMLTextAreaElement>(null)
   const resultTextareaRef = useRef<HTMLTextAreaElement>(null)
 
-   const { resolvedTheme } = useTheme()
+  const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+
+  // Use the custom MeTTa highlighter hook
+  const { highlightedCode, prismLoaded, isLoading: highlighterLoading, error: highlighterError } = useMeTTaHighlighter(code)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   const isDarkMode = mounted && resolvedTheme === "dark"
+
   // Reset code to initial value
   const handleResetCode = () => {
     setCode(initialCode)
@@ -138,118 +140,6 @@ export function CodeEditor({
     }
   }, [output, error])
 
-  // Load Prism.js for syntax highlighting
-  useEffect(() => {
-    const loadPrism = async () => {
-      try {
-        // Import Prism core
-        const prismModule = await import("prismjs")
-        const Prism = prismModule.default
-
-        // Define MeTTa language based on the provided syntax
-       Prism.languages.metta = {
-  // Comments: both single-line and block
-  comment: [
-    {
-      pattern: /\/\/.*$/m, // single-line //
-      greedy: true,
-    },
-    {
-      pattern: /\/\*[\s\S]*?\*\//, // block /* ... */
-      greedy: true,
-    },
-  ],
-
-  // Strings: single and double quoted
-  string: [
-    {
-      pattern: /'(?:[^'\\]|\\.)*'/,
-      greedy: true,
-    },
-    {
-      pattern: /"(?:[^"\\]|\\.)*"/,
-      greedy: true,
-    },
-  ],
-
-  // Keywords
-  keyword: {
-    pattern: /\b(?:Type|\$[a-zA-Z]*)\b/,
-    greedy: true,
-  },
-
-  // Operators
-  operator: {
-    pattern: /[:+*/\-]|->|=/,
-    alias:'operator'
-  },
-
-  // Parentheses (you can style these via CSS using the token name)
-  punctuation: {
-    pattern: /[()]/,
-    alias: 'parenthesis', // Will give this group a `token parenthesis` class
-  },
-
-  // Optional: Brackets and other punctuation
-  bracket: {
-    pattern: /[\[\]{}]/,
-  },
-
-  // Optional: Numbers
-  number: {
-    pattern: /\b\d+(?:\.\d+)?\b/,
-  },
-
-  // Optional: Function-like identifiers (you can remove if not needed)
-  function: {
-    pattern: /\b[a-zA-Z][a-zA-Z0-9-]*(?=\s*[(!])/,
-  },
-
-  // Punctuation like commas or semicolons
-  punctuation_mark: {
-    pattern: /[;,]/,
-  },
-}
-
-
-        setPrismLoaded(true)
-      } catch (error) {
-        console.error("Failed to load Prism:", error)
-      }
-    }
-
-    loadPrism()
-  }, [])
-
-  // Apply syntax highlighting when code changes or Prism loads
-  useEffect(() => {
-    if (!prismLoaded) return
-
-    const highlightCode = async () => {
-      try {
-        const Prism = (await import("prismjs")).default
-        const highlighted = Prism.highlight(code, Prism.languages.metta, "metta")
-        setHighlightedCode(highlighted)
-      } catch (error) {
-        console.error("Failed to highlight code:", error)
-        // Fallback to plain text if highlighting fails
-        setHighlightedCode(escapeHtml(code))
-      }
-    }
-
-    highlightCode()
-  }, [code, prismLoaded])
-
-  // Escape HTML to prevent XSS when fallback is needed
-  const escapeHtml = (text: string): string => {
-    return text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;")
-  }
-
   // Handle tab key in textarea
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Tab") {
@@ -295,12 +185,37 @@ export function CodeEditor({
     }
   }
 
+  // Get the content to display in the result area
+  const getResultContent = () => {
+    if (isExecuting) {
+      return "Executing code..."
+    } else if (error) {
+      return error
+    } else if (output) {
+      return output
+    } else {
+      return ""
+    }
+  }
+
   return (
     <div className={`code-editor-container ${className}`}>
       {/* Code Editor */}
       <Card className="border rounded-md overflow-hidden mb-4">
         <div className="group flex items-center justify-between bg-muted p-1 border-b">
-          <Badge variant="outline">{language.toUpperCase()}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">{language.toUpperCase()}</Badge>
+            {highlighterLoading && (
+              <Badge variant="secondary" className="text-xs">
+                Loading highlighter...
+              </Badge>
+            )}
+            {highlighterError && (
+              <Badge variant="destructive" className="text-xs">
+                Highlighter error
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center gap-1">
             <TooltipProvider>
               <Tooltip>
@@ -440,17 +355,4 @@ export function CodeEditor({
       </Card>
     </div>
   )
-
-  // Get the content to display in the result area
-  function getResultContent() {
-    if (isExecuting) {
-      return "Executing code..."
-    } else if (error) {
-      return error
-    } else if (output) {
-      return output
-    } else {
-      return ""
-    }
-  }
 }
