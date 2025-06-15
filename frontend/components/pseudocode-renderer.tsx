@@ -30,10 +30,6 @@ export function PseudocodeRenderer({
     <div className={`pseudocode-renderer-container ${className}`}>
       {/* Pseudocode Display */}
       <Card className="border rounded-md overflow-hidden">
-        <div className="group flex items-center justify-between bg-muted p-1 border-b">
-          <Badge variant="outline">{title}</Badge>
-        </div>
-
         <div className="relative">
           <textarea
             ref={codeTextareaRef}

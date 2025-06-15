@@ -19,24 +19,7 @@ export default async function SearchPage({
 
         <div className="text-center py-12">
           <h2 className="text-xl font-medium mb-2">Try searching with different keywords</h2>
-          <p className="text-muted-foreground mb-6">Or browse our content categories below</p>
-          <div className="flex justify-center gap-4">
-            <Link href="/tutorials">
-              <Badge variant="outline" className="text-base px-4 py-2">
-                Browse tutorials
-              </Badge>
-            </Link>
-            <Link href="/algorithms">
-              <Badge variant="outline" className="text-base px-4 py-2">
-                Browse algorithms
-              </Badge>
-            </Link>
-            <Link href="/formula-examples">
-              <Badge variant="outline" className="text-base px-4 py-2">
-                Browse formulas
-              </Badge>
-            </Link>
-          </div>
+ 
         </div>
       </div>
     </div>
