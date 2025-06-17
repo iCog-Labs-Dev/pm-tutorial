@@ -6,7 +6,7 @@ import { RefreshCcw } from "lucide-react";
 export function ResetButton() {
   const handleReset = async () => {
     try {
-      await fetch("https://pm-tutorial-2.onrender.com/reset-atomspace", {
+      await fetch("http://127.0.0.1:5000/reset-atomspace", {
         method: "POST",
       });
       alert("AtomSpace has been reset.");

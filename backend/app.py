@@ -22,36 +22,16 @@ def run_metta():
     new_code = data['code']
 
 
-
     try:
         # Generate unique session marker
-        session_id = str(int(time.time() * 1000))
-        marker_atom = f"({session_id})"
-        marker_code = f"!(println! {marker_atom})\n"
-      
-        
-        # Combine history and marker
-        full_code =  marker_code + new_code
 
         # Run code
-        result = metta_session.run(full_code)
+        result = metta_session.run(new_code)
 
         # Convert result atoms to string
         result_strs = [str(atom).strip() for atom in result]
 
-        # Find marker index
-        marker_index = next(
-            (i for i, atom in enumerate(result_strs) if atom == marker_atom),
-            None
-        )
-
-        # Extract only the result below the marker
-        if marker_index is not None:
-            snippet_result = result_strs[marker_index + 1:]
-        else:
-            snippet_result = result_strs  # fallback
-
-        formatted_result = '\n'.join(snippet_result) + '\n'
+        formatted_result = '\n'.join(result_strs) + '\n'
 
         return jsonify({
             "result": formatted_result
