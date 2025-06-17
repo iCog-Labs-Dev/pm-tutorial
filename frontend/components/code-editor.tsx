@@ -37,6 +37,7 @@ export function CodeEditor({
   const [hasRun, setHasRun] = useState(false)
 
   const codeTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const highlightRef = useRef<HTMLPreElement>(null)
   const resultTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { resolvedTheme } = useTheme()
@@ -90,7 +91,7 @@ export function CodeEditor({
 
     try {
       // Prepare the request to the MeTTa API
-      const response = await fetch("http://127.0.0.1:5000/run-metta", {
+      const response = await fetch("https://pm-tutorial-2.onrender.com/run-metta", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,11 +125,23 @@ export function CodeEditor({
     }
   }
 
+  // Sync scroll between textarea and highlight
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    const target = e.target as HTMLTextAreaElement
+    if (highlightRef.current) {
+      highlightRef.current.scrollTop = target.scrollTop
+      highlightRef.current.scrollLeft = target.scrollLeft
+    }
+  }
+
   // Auto-resize textarea based on content
   useEffect(() => {
-    if (codeTextareaRef.current) {
-      codeTextareaRef.current.style.height = "auto"
-      codeTextareaRef.current.style.height = `${codeTextareaRef.current.scrollHeight}px`
+    if (codeTextareaRef.current && highlightRef.current) {
+      const textarea = codeTextareaRef.current
+      textarea.style.height = "auto"
+      const scrollHeight = Math.max(textarea.scrollHeight, 100)
+      textarea.style.height = `${scrollHeight}px`
+      highlightRef.current.style.height = `${scrollHeight}px`
     }
   }, [code])
 
@@ -259,26 +272,10 @@ export function CodeEditor({
         </div>
 
         <div className="relative">
-          {/* Editable textarea (invisible but functional) */}
-          <textarea
-            ref={codeTextareaRef}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={handleKeyDown}
-            readOnly={readOnly}
-            spellCheck={false}
-            className="w-full font-mono text-sm p-4 resize-none absolute top-0 left-0 right-0 bottom-0 z-10 text-transparent focus:outline-none focus:ring-0 focus:border-none"
-            style={{
-              lineHeight: "1.5",
-              tabSize: 2,
-              caretColor: !isDarkMode ? "black" : "white", // Make cursor visible
-              background: "transparent",
-            }}
-          />
-
           {/* Syntax highlighted code display */}
           <pre
-            className="w-full font-mono text-sm p-4 m-0 overflow-auto whitespace-pre-wrap"
+            ref={highlightRef}
+            className="w-full font-mono text-sm p-4 m-0 absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-auto whitespace-pre-wrap"
             style={{ lineHeight: "1.5" }}
           >
             {prismLoaded ? (
@@ -287,6 +284,24 @@ export function CodeEditor({
               <code className="language-metta">{code}</code>
             )}
           </pre>
+
+          {/* Editable textarea (now visible but with transparent background) */}
+          <textarea
+            ref={codeTextareaRef}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onScroll={handleScroll}
+            readOnly={readOnly}
+            spellCheck={false}
+            className="w-full font-mono text-sm p-4 resize-none relative z-10 bg-transparent focus:outline-none focus:ring-0 focus:border-none"
+            style={{
+              lineHeight: "1.5",
+              tabSize: 2,
+              color: "transparent",
+              caretColor: !isDarkMode ? "black" : "white",
+            }}
+          />
         </div>
       </Card>
 
