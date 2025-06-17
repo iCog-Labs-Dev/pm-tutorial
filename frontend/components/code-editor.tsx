@@ -45,6 +45,9 @@ export function CodeEditor({
 
   // Use the custom MeTTa highlighter hook
   const { highlightedCode, prismLoaded, isLoading: highlighterLoading, error: highlighterError } = useMeTTaHighlighter(code)
+  
+  // Ensure highlighter updates immediately when code changes, especially when empty
+  const displayHighlightedCode = code === "" ? "" : highlightedCode
 
   useEffect(() => {
     setMounted(true)
@@ -52,7 +55,7 @@ export function CodeEditor({
 
   const isDarkMode = mounted && resolvedTheme === "dark"
 
-  // Reset code to initial value
+  // Reset code to initial value - only when explicitly called
   const handleResetCode = () => {
     setCode(initialCode)
     setOutput("")
@@ -91,7 +94,7 @@ export function CodeEditor({
 
     try {
       // Prepare the request to the MeTTa API
-      const response = await fetch("https://pm-tutorial-2.onrender.com/run-metta", {
+      const response = await fetch("http://127.0.0.1:5000/run-metta", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -139,7 +142,7 @@ export function CodeEditor({
     if (codeTextareaRef.current && highlightRef.current) {
       const textarea = codeTextareaRef.current
       textarea.style.height = "auto"
-      const scrollHeight = Math.max(textarea.scrollHeight, 100)
+      const scrollHeight = Math.max(textarea.scrollHeight, 60)
       textarea.style.height = `${scrollHeight}px`
       highlightRef.current.style.height = `${scrollHeight}px`
     }
@@ -278,14 +281,13 @@ export function CodeEditor({
             className="w-full font-mono text-sm p-4 m-0 absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-auto whitespace-pre-wrap"
             style={{ lineHeight: "1.5" }}
           >
-            {prismLoaded ? (
-              <code className="language-metta" dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+            {prismLoaded && code !== "" ? (
+              <code className="language-metta" dangerouslySetInnerHTML={{ __html: displayHighlightedCode }} />
             ) : (
               <code className="language-metta">{code}</code>
             )}
           </pre>
 
-          {/* Editable textarea (now visible but with transparent background) */}
           <textarea
             ref={codeTextareaRef}
             value={code}
@@ -319,7 +321,7 @@ export function CodeEditor({
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(getResultContent())
                         setIsCopied(true)
@@ -351,7 +353,7 @@ export function CodeEditor({
               }`}
               style={{
                 lineHeight: "1.5",
-                minHeight: "0.5rem",
+                minHeight: "40px",
                 height: "auto",
                 overflow: "hidden",
                 backgroundColor: error ? "rgba(254, 226, 226, 0.2)" : isExecuting ? "rgba(229, 231, 235, 0.2)" : "",

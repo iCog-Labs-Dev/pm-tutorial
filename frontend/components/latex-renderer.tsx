@@ -59,7 +59,7 @@ export function LatexRenderer({ content }: LatexRendererProps) {
       <li key={index} className="my-2 leading-relaxed">
         {/* Main item content */}
         {item.content && (
-          <div
+          <span
             className="mb-2"
             dangerouslySetInnerHTML={{ __html: escapeText(item.content) }}
           />
@@ -201,7 +201,7 @@ export function LatexRenderer({ content }: LatexRendererProps) {
           content: counters(item, ".") ". ";
           counter-increment: item;
           font-weight: bold;
-          color: #374151;
+          color: inherit;
         }
 
         /* Nested unordered lists should use different bullet styles */
