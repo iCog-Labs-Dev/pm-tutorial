@@ -1,20 +1,20 @@
-! (register-module! ../../../hyperon-miner)
+;! (register-module! ../../../hyperon-miner)
 ; ! (import! &dbspace hyperon-miner:experiments:data:sample-data)
-! (import! &db hyperon-miner:experiments:data:ugly_man_sodaDrinker)
-! (import! &self hyperon-miner:experiments:rules:build-specialization)
-! (import! &self hyperon-miner:experiments:rules:candidate-patterns)
-! (import! &self hyperon-miner:experiments:rules:conjunction-expansion)
-! (import! &self hyperon-miner:experiments:utils:common-utils)
-! (bind! &kb (new-space))
-! (bind! &dbspace (new-space))
-! (bind! &specspace (new-space))
-! (bind! &cndpspace (new-space))
-! (bind! &aptrnspace (new-space))
-! (bind! &conjspace (new-space))
+;! (import! &db hyperon-miner:experiments:data:ugly_man_sodaDrinker)
+;! (import! &self hyperon-miner:experiments:rules:build-specialization)
+;! (import! &self hyperon-miner:experiments:rules:candidate-patterns)
+;! (import! &self hyperon-miner:experiments:rules:conjunction-expansion)
+;! (import! &self hyperon-miner:experiments:utils:common-utils)
+;! (bind! &kb (new-space))
+;! (bind! &dbspace (new-space))
+;! (bind! &specspace (new-space))
+;! (bind! &cndpspace (new-space))
+;! (bind! &aptrnspace (new-space))
+;! (bind! &conjspace (new-space))
 ! (import! &self freq-pat)
 ! (import! &self conj-exp)
 
-!(let ($link $x $y) (get-atoms &db) (add-atom &dbspace ($link $x $y)))
+;!(let ($link $x $y) (get-atoms &db) (add-atom &dbspace ($link $x $y)))
 
 ;;function name: abstract-pattern
         ; Gets Abstract Patterns with Minimum Support so that we can use them for the specialization.
@@ -92,6 +92,10 @@
     )
 )
 
+(=(do-conjunct  $dbspace $cndpspace  $conjspace $minsup ) 
+      (match $cndpspace (CandidatePattern $pattern) (let $conj (do-conjunct $dbspace $cndpspace (replacev $pattern) $minsup (fromNumber 2)) (if (== $conj ()) () (add-atom $conjspace $conj)))) ; store candidate patterns
+)
+
 ; function name: formatter
                     ; function to format the patterns and add them to the knowledge base with their support.
 
@@ -139,22 +143,21 @@
                         ; 5: format the patterns and add them to the knowledge base with their support
 
 
-(= (frequency-pattern-miner $kb $dbspace $specspace $cndpspace $aptrnspace $conjspace $minsup $depth)
+(= (frequency-pattern-miner-old $kb $dbspace $specspace $cndpspace $aptrnspace $conjspace $minsup $depth)
     (superpose (
             (abstract-pattern $dbspace $minsup $aptrnspace) ; prevent patterns that dont have a support from being speciallized
             (match $aptrnspace (AbstractPattern $pattern) (build-specialization $pattern $dbspace $specspace)) ; specializa abstract patterns
             (candidatePattern $dbspace $specspace $minsup $cndpspace); get candidate patterns
             (match $cndpspace (CandidatePattern $pattern) (let $conj (do-conjunct $dbspace $cndpspace (replacev $pattern) $minsup (fromNumber $depth)) (if (== $conj ()) () (add-atom $conjspace $conj)))) ; store candidate patterns
-            ; (match &conjspace $pattern (superpose ((add-atom &conjspace (supportOf $pattern (sup-num $dbspace (replacev $pattern)))) (remove-atom &conjspace $pattern))))
+            ;(match &conjspace $pattern (superpose ((add-atom &conjspace (supportOf $pattern (sup-num $dbspace (replacev $pattern)))) (remove-atom &conjspace $pattern))))
             (formatter $kb $conjspace $dbspace)
         ))
 )
-
 
 
 ;  ! (abstract-pattern &dbspace 2 &aptrnspace)
 ;  ! (match &aptrnspace (AbstractPattern $pattern) $pattern)
 
 
-! (frequency-pattern-miner &kb &dbspace &specspace &cndpspace &aptrnspace &conjspace 5 0)
-! (match &kb $pattern $pattern)
+;! (frequency-pattern-miner &kb &dbspace &specspace &cndpspace &aptrnspace &conjspace 5 0)
+;! (match &kb $pattern $pattern)

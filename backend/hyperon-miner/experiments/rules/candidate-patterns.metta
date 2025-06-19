@@ -20,9 +20,9 @@
                 ( $specializedvar (replacev $specialized))
                 ($result (sup-eval $dbspace $specializedvar $minsup))
             )
-        (if (== $result True)
+        (if  $result 
             (add-atom $cndpspace (CandidatePattern $specialized))
-            $result
+            ()
         )
 
 )

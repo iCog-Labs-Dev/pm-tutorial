@@ -86,6 +86,32 @@ The abstract pattern generated is:
 (inherit $x $y)
 \end{verbatim}
 
+To check it out first load the neccessary components.
+
+
+\begin{verbatim}
+!(import! &self hyperon-miner:experiments:rules:frequent-pattern-miner)
+!(import! &self hyperon-miner:experiments:utils:common-utils)
+\end{verbatim}
+
+Create new atom space and load some ground atoms.
+
+
+\begin{verbatim}
+;; create db space 
+!(bind! &db (new-space))
+!(add-reduct &db (superpose ((drink Alice Coke)
+                                   (drink Bob Coke)
+                                    (drink Carol Tea))))
+;;Create a new space for the result                                   
+!(bind! &aptrnspace (new-space))
+\end{verbatim}
+
+    \begin{verbatim}
+;; returns abstract patterns
+!(abstract-pattern &db 2 &aptrnspace)
+!(match &aptrnspace $x $x )
+    \end{verbatim}
 
 \subsubsection{Examples of Specialized Patterns}
 
@@ -106,32 +132,56 @@ We can then
 \begin{enumerate}
 \item  Define the abstract pattern:
     \begin{verbatim}
-    p_abs = (drink $X $Y)
+ (=(p_abs)(drink $X $Y))
     \end{verbatim}
 \item  Specialize to get each grounding:
     \begin{verbatim}
-    (specialize atom-space p_abs)
-      => stream of
-         (support (drink Alice $Y) 1)
-         (support (drink Bob $Y) 1)
-         (support (drink Carol $Y) 1)
-         (support (drink $X Coke) 2)
-         (support (drink $X Tea) 1)
+    (specialize atom-space (p_abs))
+     ;; The result would look like 
+         (SpecializationOf (drink Alice $Y) (drink $x $y))
+         (SpecializationOf (drink Bob $Y) (drink $x $y))
+         (SpecializationOf (drink $X Coke)  (drink $x $y))
+         (SpecializationOf (drink $X Tea) (drink $x $y))
     \end{verbatim}
 \item   Group and count via support:
     \begin{verbatim}
-    (support p_spec 2)
-      => (candidate p_spec 2)
+(support p_spec 2)
     \end{verbatim}
-    This indicates the pattern ''\$X drinks Coke'' occurs twice.
+    This indicates the pattern ''drinks \$X  Coke'' occurs twice.
 \end{enumerate}
+
+Now let's try it with the actual build-specialization function.
+First, import the build-specialization component and create a new space to store the result.
+
+ \begin{verbatim}
+!(import! &self hyperon-miner:experiments:rules:build-specialization)
+!(bind! &specspace (new-space))
+  \end{verbatim}
+
+Since we have obtained the abstract pattern from our previous example, we can provide it  to the function.
+
+ \begin{verbatim}
+;;returns all possible specializations of the abstract pattern
+!(build-specialization (drink Z (S Z)) &db &specspace)
+!(match &specspace $x $x)
+  \end{verbatim}
+
+
 
 \subsection{Candidate Patterns and Support}
 
 A \emph{candidate pattern} is any specialized pattern whose \emph{support} \space{0.2rem} \textbf{match-count} meets your minimum threshold:
 
+import the candidate-patterns function and create a new space to store the result.
+
+ \begin{verbatim}
+!(import! &self hyperon-miner:experiments:rules:candidate-patterns)
+!(bind! &cndpspace (new-space))
+  \end{verbatim}
+
 \begin{verbatim}
-!(candidatePattern $dbspace $spezspace $minsup $cndpspace)
+!(candidatePattern &db &specspace 2 &cndpspace)
+!(match &cndpspace $x $x)
 \end{verbatim}
 
 Here:\\
@@ -145,8 +195,14 @@ Here:\\
 
 To discover richer structures, surviving patterns are greedily expanded by conjunction:
 
+ \begin{verbatim}
+!(import! &self hyperon-miner:experiments:rules:conjunction-expansion)
+!(bind! &conjspace (new-space))
+  \end{verbatim}
+
 \begin{verbatim}
-!(do-conjunct $db $cndb $conjunct $ms Z)
+!(do-conjunct  &db &cndpspace  &conjspace 2 )
+!(match &conjspace $x $x)
 \end{verbatim}
 
 \texttt{expand_conjunction} (in \texttt{experiments/rules/conjunction-expansion.metta}) pairs patterns by creating common variables between them to form multi-clause \verb|(and ...)| expressions.  Iterating with increasing depth yields N-clause patterns.

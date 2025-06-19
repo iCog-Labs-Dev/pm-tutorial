@@ -27,13 +27,13 @@
       (support (flatten $comb) $ms)))
 
 ;; Frequent patterns Miner
-(= (miner $db $ms $depth)
-    (superpose ((init-miner $db $ms $highsurp)
-                (let $link (get-links)
+(= (miner $db $ms $depth $highsurp)
+    (superpose ((init-miner $db (new-space) $ms $highsurp)
+                (let $link (get-links $db)
                   (get-candidate $depth $link $ms)))))
 
 ;; Surprising patterns miner
 (= (miner-surprising $db $ms $depth $highsurp)
-  (let* (($cptrn (miner $db $ms $depth))
+  (let* (($cptrn (miner $db $ms $depth $highsurp))
          ($isurp (iSurprisingness $cptrn)))
          (if (> $isurp $highsurp) (surp (get-pattern $cptrn) $isurp) (superpose ()))))

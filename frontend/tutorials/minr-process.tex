@@ -22,7 +22,7 @@ The Hyperon Pattern Miner is implemented entirely in MeTTa, with its core logic 
   \item \texttt{utils/MinerUtils.metta} -- provides low-level support routines (link extraction, counting, surprisingness, etc.)
 \end{itemize}
 
-Below is a step-by-step walkthrough of how \texttt{(miner \$db \$ms \$depth)} discovers frequent--and optionally surprising--patterns in your AtomSpace.
+Below is a step-by-step walkthrough of how \texttt{(miner $db $ms $depth)} discovers frequent--and optionally surprising--patterns in your AtomSpace.
 
 \subsection{Entry Point: frequent-pattern-miner and miner-surprising}
 
@@ -39,26 +39,20 @@ In \texttt{match/MinerMatch.metta} you will find two top-level definitions:
             (formatter $kb $conjspace $dbspace)
         ))
 )
-;; Return only those patterns whose I-Surprisingness > highsurp
-(= (miner-surprising $db $ms $depth $highsurp)
-  (let* (($cptrn (miner $db $ms $depth))
-         ($isurp (iSurprisingness $cptrn)))
-    (if (> $isurp $highsurp)
-        (surp (get-pattern $cptrn) $isurp)
-        (superpose ()))))
+
 \end{verbatim}
 
 Here:\\
 
 \begin{itemize}
-  \item \texttt{\$dbspace} your AtomSpace database
-  \item \texttt{\$kb} your knowledge base (AtomSpace)
-  \item \texttt{\$specspace} space for storing specialized patterns
-  \item \texttt{\$cndpspace} space for storing candidate patterns
-  \item \texttt{\$aptrnspace} space for storing abstract patterns
-  \item \texttt{\$conjspace} space for storing conjunctions (multi-clause patterns)
-  \item \texttt{\$minsup} minimum support threshold
-  \item \texttt{\$depth} maximum number of clauses per pattern
+  \item \texttt{$dbspace} your AtomSpace database
+  \item \texttt{$kb} your knowledge base (AtomSpace)
+  \item \texttt{$specspace} space for storing specialized patterns
+  \item \texttt{$cndpspace} space for storing candidate patterns
+  \item \texttt{$aptrnspace} space for storing abstract patterns
+  \item \texttt{$conjspace} space for storing conjunctions (multi-clause patterns)
+  \item \texttt{$minsup} minimum support threshold
+  \item \texttt{$depth} maximum number of clauses per pattern
   \item \texttt{highsurp} surprisingness threshold (for \texttt{miner-surprising})
 \end{itemize}
 
@@ -199,15 +193,22 @@ Here \texttt{prob} divides by \texttt{universe-size}, and the numerator measures
 A full mining call looks like:
 
 \begin{verbatim}
-!(import! &db experiments:data:ugly_man_sodaDrinker)
-!(import! &self  chaining:dtl:backward:curried)
-!(import! &temp   experiments:miner:miner-rules)
-!(import! &self  experiments:miner:system-proofs)
-!(bind! &kb (new-space))
-(=(min-sup) 6)
-(=(surp-mode ) jsdsurp)
-(=(db-ratio) 0.5)
-! (cog-mine &db &kb (min-sup) (surp-mode) (db-ratio))
+!(import! &self hyperon-miner:experiments:rules:frequent-pattern-miner)
+! (import! &db hyperon-miner:experiments:data:small-ugly)
+! (import! &self hyperon-miner:experiments:rules:build-specialization)
+! (import! &self hyperon-miner:experiments:rules:candidate-patterns)
+! (import! &self hyperon-miner:experiments:rules:conjunction-expansion)
+! (import! &self hyperon-miner:experiments:utils:common-utils)
+! (bind! &kb (new-space))
+! (bind! &dbspace (new-space))
+! (bind! &specspace (new-space))
+! (bind! &cndpspace (new-space))
+! (bind! &aptrnspace (new-space))
+!(let ($link $x $y) (get-atoms &db) (add-atom &dbspace ($link $x $y)))
+
+
+! (frequency-pattern-miner &kb &dbspace &specspace &cndpspace &aptrnspace &conjspace 5 0)
+!(match &cndpspace $pattern  $pattern)
 \end{verbatim}
 
 This single invocation will:

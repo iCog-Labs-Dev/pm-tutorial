@@ -1,6 +1,6 @@
 ! (register-module! ../../hyperon-miner)
 !(import! &self hyperon-miner:match:MinerMatch)
-!(import! &self ../utils/MinerUtils.metta)
+!(import! &self hyperon-miner:utils:MinerUtils)
 
 ;; Load sample data
 !(import! &db hyperon-miner:data:sample)
@@ -14,7 +14,7 @@
 (= (highsurp) 0.8)
 
 ;; frequent patterns 
-!(miner &db (ms) (depth))
-
+;!(miner &db (ms) (depth) (highsurp))
+!(get-links &db)
 ;; Surprising patterns
 ;!(miner-surprising &db (ms) (depth) (highsurp))
