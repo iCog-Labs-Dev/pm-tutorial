@@ -16,6 +16,9 @@ interface LatexRendererProps {
   content: LatexContent[];
 }
 
+
+let globalCodeId = 1; 
+
 export function LatexRenderer({ content }: LatexRendererProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
@@ -80,6 +83,7 @@ export function LatexRenderer({ content }: LatexRendererProps) {
               language={item.nestedCode.language || "text"}
               readOnly={true}
               showLineNumbers={false}
+              codeId={globalCodeId++}
             />
           </div>
         )}
@@ -149,13 +153,15 @@ export function LatexRenderer({ content }: LatexRendererProps) {
         );
 
       case "code":
-        return (
-          <div key={index}>
-            <CodeEditor
-              code={item?.content ?? ""}
-              language={item.language || "text"}
-            />
-          </div>
+     const codeId = globalCodeId++; // assign unique ID
+       return (
+         <div key={index}>
+              <CodeEditor
+               code={item?.content ?? ""}
+               language={item.language || "text"}
+               codeId={codeId}  
+      />
+    </div>
         );
       case "pseudocode":
         return (

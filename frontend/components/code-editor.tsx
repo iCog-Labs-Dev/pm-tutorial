@@ -19,10 +19,12 @@ interface CodeEditorProps {
   readOnly?: boolean
   showLineNumbers?: boolean
   className?: string
+  codeId:number
 }
 
 export function CodeEditor({
   code: initialCode,
+  codeId,
   language = "metta",
   readOnly: initialReadOnly = false,
   showLineNumbers = true,
@@ -56,19 +58,62 @@ export function CodeEditor({
   const isDarkMode = mounted && resolvedTheme === "dark"
 
   // Reset code to initial value - only when explicitly called
-  const handleResetCode = () => {
-    setCode(initialCode)
-    setOutput("")
-    setError(null)
-    setHasRun(false)
+  // Reset result output
+ const handleResetCode = async () => {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/reset-to-code", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ codeId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Reset API returned status ${response.status}: ${response.statusText}`
+      );
+    }
+      setCode(initialCode);
+      setOutput("");
+      setError(null);
+      setHasRun(false);
+    
+  } catch (err) {
+    console.error("Reset code failed:", err);
+    setError(err instanceof Error ? err.message : String(err));
+  } finally {
+    setIsExecuting(false);
   }
+}
 
   // Reset result output
-  const handleResetResult = () => {
+ const handleResetResult = async () => {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/reset-to-code", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ codeId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Reset API returned status ${response.status}: ${response.statusText}`
+      );
+    }
     setOutput("")
     setError(null)
     setHasRun(false)
+    
+  } catch (err) {
+    console.error("Reset code failed:", err);
+    setError(err instanceof Error ? err.message : String(err));
+  } finally {
+    setIsExecuting(false);
   }
+}
 
   // Toggle read-only mode
   const toggleReadOnly = () => {
@@ -102,7 +147,8 @@ export function CodeEditor({
         body: JSON.stringify({
           code: code,
           language: "metta",
-        }),
+          codeId: codeId,
+              }),
       })
 
       if (!response.ok) {
