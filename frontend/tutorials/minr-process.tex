@@ -35,7 +35,7 @@ In \texttt{match/MinerMatch.metta} you will find two top-level definitions:
             (abstract-pattern $dbspace $minsup $aptrnspace) ; prevent patterns that dont have a support from being speciallized
             (match $aptrnspace (AbstractPattern $pattern) (build-specialization $pattern $dbspace $specspace)) ; specializa abstract patterns
             (candidatePattern $dbspace $specspace $minsup $cndpspace); get candidate patterns
-            (match $cndpspace (CandidatePattern $pattern) (let $conj (do-conjunct $dbspace $cndpspace (replacev $pattern) $minsup (fromNumber $depth)) (if (== $conj ()) () (add-atom $conjspace $conj)))) ; store candidate patterns
+            (match $cndpspace (CandidatePattern $pattern) (let $conj (do-conjunct $dbspace $cndpspace  $pattern $minsup (fromNumber $depth)) (if (== $conj ()) () (add-atom $conjspace $conj)))) ; store candidate patterns
             (formatter $kb $conjspace $dbspace)
         ))
 )
@@ -193,7 +193,7 @@ Here \texttt{prob} divides by \texttt{universe-size}, and the numerator measures
 A full mining call looks like:
 
 \begin{verbatim}
-!(import! &self hyperon-miner:experiments:rules:frequent-pattern-miner)
+! (import! &self hyperon-miner:experiments:rules:frequent-pattern-miner)
 ! (import! &db hyperon-miner:experiments:data:small-ugly)
 ! (import! &self hyperon-miner:experiments:rules:build-specialization)
 ! (import! &self hyperon-miner:experiments:rules:candidate-patterns)
@@ -203,12 +203,14 @@ A full mining call looks like:
 ! (bind! &dbspace (new-space))
 ! (bind! &specspace (new-space))
 ! (bind! &cndpspace (new-space))
+! (bind! &conjspace (new-space))
 ! (bind! &aptrnspace (new-space))
+
 !(let ($link $x $y) (get-atoms &db) (add-atom &dbspace ($link $x $y)))
 
 
-! (frequency-pattern-miner &kb &dbspace &specspace &cndpspace &aptrnspace &conjspace 5 0)
-!(match &cndpspace $pattern  $pattern)
+! (frequency-pattern-miner &kb &dbspace &specspace &cndpspace &aptrnspace &conjspace 2 0)
+!(match &kb $pattern  $pattern)
 \end{verbatim}
 
 This single invocation will:

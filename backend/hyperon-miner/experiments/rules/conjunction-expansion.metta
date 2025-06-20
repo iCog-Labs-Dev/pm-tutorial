@@ -46,6 +46,7 @@
     (if $es
         (expand_conjunctin_es_rec $cnjtion $pattern $db $ms)
         (expand_conjunction_rec $cnjtion $pattern $db $ms)
+
     )
 )
 
@@ -238,7 +239,7 @@
 (= (expand_conjunction_connect $cnjtion $pattern $cv $pv)
     (let $list (replace_pattern $cnjtion $pattern (combine_lists $cv $pv))
         ; (remove_alpha_similar $list)
-        $list
+        $list  
     )
 )
 (= (replace_pattern $cnjtion $pattern ())

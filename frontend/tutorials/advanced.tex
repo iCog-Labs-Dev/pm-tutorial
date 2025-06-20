@@ -21,27 +21,18 @@ The file \texttt{data/sample.metta} defines a toy population of ''humans'' with 
 
 \begin{verbatim}
 ;; 1. Start a fresh AtomSpace and load the sample data
-(def atom-space (atomspace.new))
-(load-file "data/sample.metta")
+!(import! &db hyperon-miner:experiments:data:small-ugly)
+
 ;; 2. Mine up to 2-clause patterns, requiring at least 5 matches
-(def opts {:graph       atom-space
-           :max-clauses 2
-           :min-freq    5
-           :measure     i-surprisingness})
-(def results (miner.mine-patterns opts))
-;; 3. Display the top patterns
-(take 5 results)
+!(frequency-pattern-miner &kb &dbspace &specspace &cndpspace &aptrnspace &conjspace 2 0)
+
 \end{verbatim}
 
 Expected output might include:
 
 \begin{verbatim}
-(and 
-  (inherit ($X) sodadrinker)
-  (inherit ($X) man))    ; freq: 12, I-surprisingness: +1.2
-(and 
-  (inherit ($X) sodadrinker)
-  (inherit ($X) ugly))   ; freq:  8, I-surprisingness: +0.8
+(,(inherit $X sodadrinker) (inherit $X man))    ; freq: 12, I-surprisingness: +1.2
+(, (inherit $X sodadrinker) (inherit $X ugly))   ; freq:  8, I-surprisingness: +0.8
 \end{verbatim}
 
 \subsection{Specialized Pipeline via frequent-pattern-miner.metta}
@@ -49,7 +40,6 @@ Expected output might include:
 The script \texttt{experiments/rules/frequent-pattern-miner.metta} automates data loading, mining frequent patterns:
 
 \begin{verbatim}
-! (register-module! ../../../hyperon-miner)
 ! (import! &dbspace   hyperon-miner:experiments:data:ugly_man_sodaDrinker)
 ! (import! &self hyperon-miner:experiments:rules:build-specialization)
 ! (import! &self hyperon-miner:experiments:rules:candidate-patterns)
@@ -87,58 +77,79 @@ The \texttt{dependent-types/} folder shows how to enforce structural constraints
 
 \begin{verbatim}
 ;; 1. Load the dependent-type miner module
-(load-file "dependent-types/MinerCurriedDTL.metta")
+!(import! &kb hyperon-miner:dependent-types:MinerCurriedDTL)
+
 ;; 2. Instantiate a type-aware miner
-(def typed-miner (MinerCurriedDTL atom-space))
+;; Initialize miner with the given db, kb and parameters
+!(init-miner &db &kb (ms) (highsurp))
 ;; 3. Mine patterns respecting DTL rules
-(def dtl-results
-  (typed-miner.mine-patterns
-    :max-clauses 3
-    :min-freq    4
-    :measure     i-surprisingness))
+;; frequent patterns 
+!(miner &db (ms) (depth) (highsurp))
+
+;; Surprising patterns
+!(miner-surprising &db (ms) (depth) (highsurp))
+
+;;This may not run here ,explore it in the hyperon-miner:dependent-types folder.
 \end{verbatim}
 
 Only patterns meeting your dependent-type invariants will survive.
 
-\subsection{JSD-Based Surprisingness}
-
-You can use a Jensen-Shannon Divergence measure from \texttt{experiments/rules/jsd-surpr}:
-
-\begin{verbatim}
-!(import! &db experiments:data:ugly_man_sodaDrinker)
-!(import! &self  chaining:dtl:backward:curried)
-!(import! &temp   experiments:miner:miner-rules)
-!(import! &self  experiments:miner:system-proofs)
-!(bind! &kb (new-space))
-(=(min-sup) 6)
-(=(surp-mode ) jsdsurp)
-(=(db-ratio) 0.5)
-! (cog-mine &db &kb (min-sup) (surp-mode) (db-ratio))
-\end{verbatim}
-
-This surfaces clause pairs whose joint distribution diverges most from independence.
 
 \subsection{Empirical Truth-Value (EMPTV) Scoring}
 
 When your AtomSpace uses STV atoms, convert pattern probabilities into STV judgments:
 
 \begin{verbatim}
-;; 1. Import the EMPTV rule
-(import! &etv-ex hyperon-miner:experiments:rules:emp-tv)
-;; 2. Mine 1-clause patterns with support >= 8
-(=(min-sup) 8)
-! (cog-mine &db &kb (min-sup))
-;; 3. Tag each with an STV
+;; 1. Import the EMPTV components 
+! (import! &self experiments:utils:emp-tv-bs)
+! (import! &self experiments:utils:bs-utils)
+! (import! &self experiments:utils:common-utils)
+! (import! &self experiments:utils:beta-dist)
+! (import! &self experiments:utils:constants)
+! (import! &self experiments:utils:TruthValue)
+! (import! &self experiments:utils:surp-utils)
+! (import! &self experiments:utils:miner-utils)
+! (import! &self experiments:utils:gen_partition)
+! (import! &self experiments:rules:est-tv)
+! (import! &self experiments:rules:emp-tv)
+! (import! &db experiments:data:ugly_man_sodaDrinker)
+
+;;Pattern: 
+(= (pattern) (, (Inheritance $x $z) (Inheritance $x human)))
+!(emp-tv  (pattern) &db )
 \end{verbatim}
 
-You will get a list of triples:
+\subsection{Truth-Value Estimation (ESTV) }
+
+Component to calculate the probability (or truth value) estimate of a pattern
 
 \begin{verbatim}
-(pattern)   support-count   (stv pattern probability confidence)
+;;Import the est-tv components, but comment out the already loaded ones.
+;;Since everything is already loaded above, no need to import anything here.
+!(do-ji-tv-est  &db (pattern) $emp-tv)
+
+;;this computes the joint-independent truth value estimate of the pattern
 \end{verbatim}
 
-allowing you to filter by both frequency and subjective confidence in one pass.
+You will get simple truth value of the pattern :
 
+\begin{verbatim}
+(STV probability confidence)
+\end{verbatim}
 
+\subsection{JSD-Based Surprisingness}
+
+You can use a Jensen-Shannon Divergence measure from \texttt{experiments/rules/jsd-surpr}:
+
+JSD helps you to calculate the difference between the empirical truth value and the truth value estimate of a pattern. Therefore, we can take this difference as the surprisingness of the pattern.
+
+\begin{verbatim}
+! (import! &self experiments:utils:util-jsd)
+! (import! &self experiments:rules:jsd)
+
+!(do-jsd $emp-tv $est-tv) 
+\end{verbatim}
+
+This surfaces clause pairs whose joint distribution diverges most from independence.
 
 \end{document}

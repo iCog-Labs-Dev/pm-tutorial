@@ -74,6 +74,9 @@ def reset_to_code():
         return jsonify({"error": "codeId is required"}), 400
     
     target_code_id = data['codeId']
+
+    if len(code_history) == 0 :
+      return "", 200
     
     try:
         # Find the index of the target code ID
@@ -146,6 +149,9 @@ def remove_code():
         return jsonify({"error": "codeId is required"}), 400
     
     target_code_id = data['codeId']
+
+    if len(code_history) == 0 :
+        return "", 200
     
     try:
         # Find the index of the target code ID

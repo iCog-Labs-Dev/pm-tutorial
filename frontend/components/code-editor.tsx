@@ -98,11 +98,7 @@ export function CodeEditor({
       body: JSON.stringify({ codeId }),
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `Reset API returned status ${response.status}: ${response.statusText}`
-      );
-    }
+
     setOutput("")
     setError(null)
     setHasRun(false)
@@ -150,10 +146,6 @@ export function CodeEditor({
           codeId: codeId,
               }),
       })
-
-      if (!response.ok) {
-        throw new Error(`API returned status ${response.status}: ${response.statusText}`)
-      }
 
       const data = await response.json()
 
