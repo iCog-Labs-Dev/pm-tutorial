@@ -57,7 +57,7 @@ export function CodeEditor({
 
   const isDarkMode = mounted && resolvedTheme === "dark"
 
-  // Reset code to initial value - only when explicitly called
+  // Reset code to initial value . only when explicitly called
   // Reset result output
  const handleResetCode = async () => {
   try {
