@@ -127,6 +127,7 @@ To demonstrate the use of surprisingness in Hyperon, we will set up a simple exp
 and want to mine surprising patterns from it.
 \subsection{Setting Up the Experiment}
 First, we need to set up the environment and import the necessary modules. The following code snippet initializes the miner and imports the required utilities and rules for surprisingness calculations:
+
 \begin{verbatim}
 !(register-module! ../../experiments)
 !(register-module!  ../../../chaining)
@@ -159,6 +160,7 @@ First, we need to set up the environment and import the necessary modules. The f
 
 \subsection{Creating the Database and Knowledge Base}
 Next, we create a new database and a knowledge base (KB) to store the patterns we will mine. The following code snippet initializes the database and KB, and sets up the parameters for the mining process:
+
 \begin{verbatim}
 ;;create new space for kb
 !(bind! &kb (new-space))
@@ -173,11 +175,6 @@ Next, we create a new database and a knowledge base (KB) to store the patterns w
 ;; without sorting 
 ! (cog-mine &db &kb (min-sup) (surp-mode) (db-ratio))
 \end{verbatim}
-
-
-
-
-
 
 
 
