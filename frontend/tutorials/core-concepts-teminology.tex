@@ -102,7 +102,10 @@ Create new atom space and load some ground atoms.
 !(bind! &db (new-space))
 !(add-reduct &db (superpose ((drink Alice Coke)
                                    (drink Bob Coke)
+                                   (drink Alice Tea)
+                                   (drink Bob Tea)
                                     (drink Carol Tea))))
+                                    
 ;;Create a new space for the result                                   
 !(bind! &aptrnspace (new-space))
 \end{verbatim}

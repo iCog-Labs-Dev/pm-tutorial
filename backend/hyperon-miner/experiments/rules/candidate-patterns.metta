@@ -17,8 +17,9 @@
 (= (candidatePattern $dbspace $spezspace $minsup $cndpspace)
     (match $spezspace (SpecializationOf $specialized $pattern)
         (let* (
+                
                 ( $specializedvar (replacev $specialized))
-                ($result (sup-eval $dbspace $specializedvar $minsup))
+                ($result (sup-eval $dbspace $specializedvar $minsup))  
             )
         (if  $result 
             (add-atom $cndpspace (CandidatePattern $specialized))

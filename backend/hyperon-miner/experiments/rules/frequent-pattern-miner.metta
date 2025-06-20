@@ -68,8 +68,9 @@
 
 
 
-(= (do-conjunct $db $cndb $conjunct $ms Z)
+(= (do-conjunct $db $cndb $pre_conjunct $ms Z)
     (let* (
+        ($conjunct (replacev $pre_conjunct))
         ($matches (match $cndb (CandidatePattern $pattern) (replacev $pattern)))
         ($listconj (expand_conjunction $conjunct $matches $db $ms 2 False))
         ($debconj (replace $listconj))
@@ -79,21 +80,26 @@
     )
 )
 
-(= (do-conjunct $db $cndb $conjunct $ms (S $K))
+(= (do-conjunct $db $cndb $pre_conjunct $ms (S $K))
     (let* (
+        ($conjunct (replacev $pre_conjunct))
         ($matches (match $cndb (CandidatePattern $pattern) (replacev $pattern)))
         ($listconj (expand_conjunction $conjunct $matches $db $ms 2 False))
         ($debconj (replace $listconj))
         ($fitlered (remove_conjuncts_with_redundant_clauses $debconj))
         ($varconj (replacev $fitlered))
-        ($conj (do-conjunct $db $cndb $varconj $ms $K))
+        ($conj (do-conjunct $db $cndb $varconj $ms $K))    
     )
     $conj
     )
 )
 
 (=(do-conjunct  $dbspace $cndpspace  $conjspace $minsup ) 
-      (match $cndpspace (CandidatePattern $pattern) (let $conj (do-conjunct $dbspace $cndpspace (replacev $pattern) $minsup (fromNumber 2)) (if (== $conj ()) () (add-atom $conjspace $conj)))) ; store candidate patterns
+      (match $cndpspace (CandidatePattern $pattern)   
+      (let $conj (do-conjunct $dbspace $cndpspace  $pattern $minsup (fromNumber 2)) 
+                    (if (== $conj ()) () (add-atom $conjspace $conj)))
+                    ) ; store candidate patterns
+                  
 )
 
 ; function name: formatter
