@@ -116,15 +116,18 @@ The function \texttt{candidatePattern} handles filtertion of specializations usi
 (= (candidatePattern $dbspace $spezspace $minsup $cndpspace)
     (match $spezspace (SpecializationOf $specialized $pattern)
         (let* (
+                
                 ( $specializedvar (replacev $specialized))
-                ($result (sup-eval $dbspace $specializedvar $minsup))
+                ($result (sup-eval $dbspace $specializedvar $minsup))  
             )
-        (if (== $result True)
+        (if  $result 
             (add-atom $cndpspace (CandidatePattern $specialized))
-            $result
+            ()
         )
+
 )
 )
+
 )
 \end{verbatim}
 
@@ -135,8 +138,9 @@ This filters out any specializations that do not meet the minimum support thresh
 The function \texttt{do-conjunct} handles the conjunction of candidate patterns:
 
 \begin{verbatim}
-(= (do-conjunct $db $cndb $conjunct $ms Z)
+(= (do-conjunct $db $cndb $pre_conjunct $ms Z)
     (let* (
+        ($conjunct (replacev $pre_conjunct))
         ($matches (match $cndb (CandidatePattern $pattern) (replacev $pattern)))
         ($listconj (expand_conjunction $conjunct $matches $db $ms 2 False))
         ($debconj (replace $listconj))
@@ -145,14 +149,16 @@ The function \texttt{do-conjunct} handles the conjunction of candidate patterns:
     $fitlered
     )
 )
-(= (do-conjunct $db $cndb $conjunct $ms (S $K))
+
+(= (do-conjunct $db $cndb $pre_conjunct $ms (S $K))
     (let* (
+        ($conjunct (replacev $pre_conjunct))
         ($matches (match $cndb (CandidatePattern $pattern) (replacev $pattern)))
         ($listconj (expand_conjunction $conjunct $matches $db $ms 2 False))
         ($debconj (replace $listconj))
         ($fitlered (remove_conjuncts_with_redundant_clauses $debconj))
         ($varconj (replacev $fitlered))
-        ($conj (do-conjunct $db $cndb $varconj $ms $K))
+        ($conj (do-conjunct $db $cndb $varconj $ms $K))    
     )
     $conj
     )
@@ -194,7 +200,7 @@ A full mining call looks like:
 
 \begin{verbatim}
 ! (import! &self hyperon-miner:experiments:rules:frequent-pattern-miner)
-! (import! &db hyperon-miner:experiments:data:small-ugly)
+! (import! &dbb hyperon-miner:experiments:data:small-ugly)
 ! (import! &self hyperon-miner:experiments:rules:build-specialization)
 ! (import! &self hyperon-miner:experiments:rules:candidate-patterns)
 ! (import! &self hyperon-miner:experiments:rules:conjunction-expansion)
@@ -206,7 +212,7 @@ A full mining call looks like:
 ! (bind! &conjspace (new-space))
 ! (bind! &aptrnspace (new-space))
 
-!(let ($link $x $y) (get-atoms &db) (add-atom &dbspace ($link $x $y)))
+!(let ($link $x $y) (get-atoms &dbb) (add-atom &dbspace ($link $x $y)))
 
 
 ! (frequency-pattern-miner &kb &dbspace &specspace &cndpspace &aptrnspace &conjspace 2 0)
