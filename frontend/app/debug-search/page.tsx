@@ -7,27 +7,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { searchQuery,searchType,debugInfo,handleDirectSearch,handleFormSubmit, setDebugInfo,setSearchQuery,setSearchType} from "@/components/HandledebugMethods"
 
 export default function DebugSearchPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchType, setSearchType] = useState("all")
-  const [debugInfo, setDebugInfo] = useState("")
 
-  const handleDirectSearch = () => {
-    if (searchQuery.trim()) {
-      const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`
-      window.location.href = url
-    }
-  }
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`
-      setDebugInfo(`Form submitted. Redirecting to: ${url}`)
-      window.location.href = url
-    }
-  }
 
   return (
     <div className=" py-8">
