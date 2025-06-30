@@ -1,25 +1,36 @@
-  import React from 'react'
-  import { useState } from 'react'
-  export const [searchType, setSearchType] = useState("all")
+// components/useDebugSearch.ts
+"use client";
 
-  export const [searchQuery, setSearchQuery] = useState("")
+import { useState } from "react";
 
-  export const [debugInfo, setDebugInfo] = useState("")
-  
-  export const handleDirectSearch = () => {
+export function useDebugSearch() {
+  const [searchType, setSearchType]   = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debugInfo, setDebugInfo]     = useState("");
+
+  const handleDirectSearch = () => {
     if (searchQuery.trim()) {
-      const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`
-      window.location.href = url
+      const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`;
+      window.location.href = url;
     }
-  }
-  
+  };
 
-  export const handleFormSubmit = (e: React.FormEvent) => {
-      e.preventDefault()
-      if (searchQuery.trim()) {
-        const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`
-        setDebugInfo(`Form submitted. Redirecting to: ${url}`)
-        window.location.href = url
-      }
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`;
+      setDebugInfo(`Form submitted. Redirecting to: ${url}`);
+      window.location.href = url;
     }
+  };
 
+  return {
+    searchType,
+    setSearchType,
+    searchQuery,
+    setSearchQuery,
+    debugInfo,
+    handleDirectSearch,
+    handleFormSubmit,
+  };
+}

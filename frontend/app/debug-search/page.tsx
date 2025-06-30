@@ -1,15 +1,24 @@
-"use client"
+"use client";
 
 import type React from "react"
 import { SearchTest } from "./search-test"
-import { useState } from "react"
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { searchQuery,searchType,debugInfo,handleDirectSearch,handleFormSubmit, setDebugInfo,setSearchQuery,setSearchType} from "@/components/HandledebugMethods"
+import { useDebugSearch} from "@/components/HandledebugMethods"
 
 export default function DebugSearchPage() {
+    const {
+    searchType,
+    setSearchType,
+    searchQuery,
+    setSearchQuery,
+    debugInfo,
+    handleDirectSearch,
+    handleFormSubmit,
+  } = useDebugSearch();
 
 
   return (

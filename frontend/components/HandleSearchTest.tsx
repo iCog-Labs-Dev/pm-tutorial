@@ -1,50 +1,62 @@
-import React from "react"
-import { useState } from "react"
+
+"use client";
+
+import { useState } from "react";
 
 export interface SearchResult {
-  url: string
-  title: string
-  relevance: number
-  sectionTitle?: string
-  description: string
-  matchContext?: string
-  category: string
-  tags: string[]
+  url: string;
+  title: string;
+  relevance: number;
+  sectionTitle?: string;
+  description: string;
+  matchContext?: string;
+  category: string;
+  tags: string[];
 }
 
-export  const [searchQuery, setSearchQuery] = useState("")
-export  const [results, setResults] = useState<SearchResult[]>([])
-export  const [isSearching, setIsSearching] = useState(false)
-export  const [debugInfo, setDebugInfo] = useState("")
-export  const [error, setError] = useState<string | null>(null)
+export function useSearch() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults]         = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [debugInfo, setDebugInfo]     = useState("");
+  const [error, setError]             = useState<string | null>(null);
 
-export  const handleSearch = async () => {
-    if (!searchQuery.trim()) return
+  const handleSearch = async () => {
+    const q = searchQuery.trim();
+    if (!q) return;
 
-    setIsSearching(true)
-    setError(null)
-    setDebugInfo(`Searching for: "${searchQuery.trim()}"...`)
+    setIsSearching(true);
+    setError(null);
+    setDebugInfo(`Searching for: "${q}"...`);
 
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery.trim())}`)
-
-      if (!response.ok) {
-        throw new Error(`Search API returned ${response.status}: ${response.statusText}`)
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      if (!res.ok) {
+        throw new Error(`Search API returned ${res.status}: ${res.statusText}`);
       }
-
-      const data: SearchResult[] = await response.json()
-      
-      setResults(data)
+      const data: SearchResult[] = await res.json();
+      setResults(data);
       setDebugInfo(
-        `Search complete. Found ${data.length} results for "${searchQuery.trim()}"\n\n` +
-          `The search looks for exact matches of your query in all LaTeX files.`,
-      )
-    } catch (error) {
-      console.error("Search error:", error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      setError(errorMessage)
-      setDebugInfo(`Error searching: ${errorMessage}`)
+        `Search complete. Found ${data.length} results for "${q}".\n\n` +
+        `The search looks for exact matches of your query in all LaTeX files.`
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("Search error:", err);
+      setError(msg);
+      setDebugInfo(`Error searching: ${msg}`);
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
-  }
+  };
+
+  return {
+    searchQuery,
+    setSearchQuery,
+    results,
+    isSearching,
+    debugInfo,
+    error,
+    handleSearch,
+  };
+}
