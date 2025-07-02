@@ -1,33 +1,25 @@
-"use client"
+"use client";
 
 import type React from "react"
 import { SearchTest } from "./search-test"
-import { useState } from "react"
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { useDebugSearch} from "@/components/HandledebugMethods"
 
 export default function DebugSearchPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchType, setSearchType] = useState("all")
-  const [debugInfo, setDebugInfo] = useState("")
+    const {
+    searchType,
+    setSearchType,
+    searchQuery,
+    setSearchQuery,
+    debugInfo,
+    handleDirectSearch,
+    handleFormSubmit,
+  } = useDebugSearch();
 
-  const handleDirectSearch = () => {
-    if (searchQuery.trim()) {
-      const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`
-      window.location.href = url
-    }
-  }
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      const url = `/search?q=${encodeURIComponent(searchQuery.trim())}&type=${searchType}`
-      setDebugInfo(`Form submitted. Redirecting to: ${url}`)
-      window.location.href = url
-    }
-  }
 
   return (
     <div className=" py-8">
