@@ -63,6 +63,8 @@ def run_metta():
         }), 500
 
 
+
+
 @app.route('/reset-to-code', methods=['POST'])
 def reset_to_code():
     """Reset atomspace and replay code history up to (but excluding) the specified code ID"""
@@ -94,7 +96,12 @@ def reset_to_code():
         
         # Keep only the code entries before the target index
         previous_code = code_history[:target_index]
-        code_history = previous_code
+        #because this makes the code_history name point to a new list the reference of the orignial list inside the test module doesn't get updated  
+        #code_history = previous_code
+        # mutate the existing list so all references see the change
+        #.clear() + .extend(...) mutates the same list object in memory
+        code_history.clear()
+        code_history.extend(previous_code)
         
         # Replay all previous code
         replay_results = []
@@ -125,7 +132,8 @@ def reset_atomspace():
     """Complete reset of atomspace and code history"""
     global metta_session, code_history
     metta_session = MeTTa()
-    code_history = []
+    #updated for the same reason stated in the reset-to-code method
+    code_history.clear()
     return jsonify({"message": "AtomSpace and code history completely reset."})
 
 
@@ -171,7 +179,11 @@ def remove_code():
         metta_session = MeTTa()
         
         # Keep only the code entries before the target index
-        code_history = code_history[:target_index]
+        # code_history = code_history[:target_index]
+        #updated for the same reason stated in the reset-to-code method
+        new_history = code_history[:target_index]
+        code_history.clear()
+        code_history.extend(new_history)
         
         # Replay remaining code
         replay_results = []
