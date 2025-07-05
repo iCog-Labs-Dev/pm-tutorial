@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // override just the JSX mode so ts-jest actually emits JS
+    "jsx": "react-jsx"
+  }
+}
