@@ -33,8 +33,7 @@ jobs:
 
       - name: Run backend pytest
         working-directory: backend
-        env:
-          FLASK_ENV: testing
+
         run: |
           pytest --maxfail=1 --disable-warnings -q
 
