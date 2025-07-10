@@ -61,7 +61,7 @@ export function CodeEditor({
   // Reset result output
  const handleResetCode = async () => {
   try {
-    const response = await fetch("https://pm-tutorial-2.onrender.com/reset-to-code", {
+    const response = await fetch("http://127.0.0.1:5000/reset-to-code", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export function CodeEditor({
   // Reset result output
  const handleResetResult = async () => {
   try {
-    const response = await fetch("https://pm-tutorial-2.onrender.com/reset-to-code", {
+    const response = await fetch("http://127.0.0.1:5000/reset-to-code", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -135,7 +135,7 @@ export function CodeEditor({
 
     try {
       // Prepare the request to the MeTTa API
-      const response = await fetch("https://pm-tutorial-2.onrender.com/run-metta", {
+      const response = await fetch("http://127.0.0.1:5000/run-metta", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
