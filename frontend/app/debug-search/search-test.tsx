@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { useSearch} from "@/components/HandleSearchTest"
+import { useSearch} from "@/hooks/HandleSearchTest"
 
 
 
